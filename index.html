@@ -56,38 +56,38 @@ h1,h2,h3{font-weight:700;margin:0}
 .disclosure.open .disclosure-body{display:block}
 
 /* --- hero: tarjeta con anillo de progreso, acento menta --- */
-.hero-card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:22px 20px;margin-bottom:12px}
+.hero-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px 16px;margin-bottom:8px}
 .hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
 .hero-top-text{min-width:0;flex:1}
-.hero-label{font-size:.76rem;color:var(--muted);margin-bottom:6px}
-.hero-value{font-family:'JetBrains Mono',monospace;font-size:1.9rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;color:var(--ink);overflow-wrap:break-word}
-.hero-sub{font-size:.76rem;color:var(--muted);margin-top:4px}
-.ring{position:relative;width:72px;height:72px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.hero-label{font-size:.7rem;color:var(--muted);margin-bottom:3px}
+.hero-value{font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;color:var(--ink);overflow-wrap:break-word}
+.hero-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+.ring{position:relative;width:54px;height:54px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
 .ring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--mint) calc(var(--pct,0) * 1%), var(--surface-2) 0)}
-.ring::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--surface)}
-.ring span{position:relative;font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
-.hero-chips{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
-.hero-chip{flex:1;min-width:0;background:var(--surface-2);border-radius:12px;padding:9px 10px}
-.hero-chip .label{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
-.hero-chip .value{font-family:'JetBrains Mono',monospace;font-size:.84rem;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:break-word;color:var(--ink)}
+.ring::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--surface)}
+.ring span{position:relative;font-size:.68rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.hero-chips{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.hero-chip{flex:1;min-width:0;background:var(--surface-2);border-radius:10px;padding:6px 8px}
+.hero-chip .label{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:1px}
+.hero-chip .value{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:break-word;color:var(--ink)}
 
 /* --- tarjetas de cuenta --- */
-.balances{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.balance-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:15px;min-width:0}
+.balances{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.balance-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:11px 13px;min-width:0}
 .balance-card.citi .value,.balance-card.cash .value{color:var(--mint)}
-.balance-card .label{font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:600}
-.balance-card .value{font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-variant-numeric:tabular-nums;font-weight:700}
-.balance-card .bar{height:5px;border-radius:99px;background:var(--surface-2);margin-top:10px;overflow:hidden}
+.balance-card .label{font-size:.68rem;color:var(--muted);margin-bottom:3px;font-weight:600}
+.balance-card .value{font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700}
+.balance-card .bar{height:4px;border-radius:99px;background:var(--surface-2);margin-top:7px;overflow:hidden}
 .balance-card .bar-fill{height:100%;border-radius:99px;background:var(--mint);opacity:.8}
 
-.pending-strip{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto}
-.pending-chip{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 13px;font-size:.75rem;color:var(--muted);display:flex;gap:6px;align-items:center}
+.pending-strip{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
+.pending-chip{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 11px;font-size:.7rem;color:var(--muted);display:flex;gap:6px;align-items:center}
 .pending-chip b{font-family:'JetBrains Mono',monospace;color:var(--ink)}
 
-.section-title{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px;font-weight:700}
+.section-title{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 8px;font-weight:700}
 
-.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:12px}
-.card h2{font-size:1.02rem;margin-bottom:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.card h2{font-size:.96rem;margin-bottom:10px}
 
 .form-row{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
 .form-row label{font-size:.72rem;color:var(--muted);font-weight:600}
@@ -219,8 +219,12 @@ h1,h2,h3{font-weight:700;margin:0}
   <div class="pending-strip" id="pending-strip"></div>
 
   <div class="panel active" id="panel-rendiciones">
-    <div class="card">
-      <h2>Nuevo gasto a rendir</h2>
+    <div class="disclosure" id="r-add-disclosure">
+      <button class="disclosure-btn" id="r-add-disclosure-btn">
+        <span>+ Nuevo gasto a rendir</span>
+        <span class="chev"></span>
+      </button>
+      <div class="disclosure-body">
       <div class="form-row">
         <label for="r-desc">Descripción (opcional)</label>
         <input id="r-desc" type="text" placeholder="Ej: Taxi reunión cliente">
@@ -257,6 +261,7 @@ h1,h2,h3{font-weight:700;margin:0}
         </select>
       </div>
       <button class="btn btn-primary" id="r-add">Cargar gasto</button>
+      </div>
     </div>
 
     <div class="disclosure" id="r-disclosure">
@@ -278,8 +283,12 @@ h1,h2,h3{font-weight:700;margin:0}
   </div>
 
   <div class="panel" id="panel-movimientos">
-    <div class="card">
-      <h2>Extracción / depósito ATM</h2>
+    <div class="disclosure" id="m-add-disclosure">
+      <button class="disclosure-btn" id="m-add-disclosure-btn">
+        <span>+ Extracción / depósito ATM</span>
+        <span class="chev"></span>
+      </button>
+      <div class="disclosure-body">
       <div class="form-row">
         <label for="atm-monto">Monto a mover</label>
         <input id="atm-monto" type="number" step="0.01" placeholder="0.00">
@@ -288,10 +297,15 @@ h1,h2,h3{font-weight:700;margin:0}
         <button class="btn btn-ghost" id="atm-retiro" style="flex:1">CITI → Efectivo (retiro)</button>
         <button class="btn btn-ghost" id="atm-deposito" style="flex:1">Efectivo → CITI (depósito)</button>
       </div>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Gasto personal (no se rinde)</h2>
+    <div class="disclosure" id="m-gasto-disclosure">
+      <button class="disclosure-btn" id="m-gasto-disclosure-btn">
+        <span>+ Gasto personal (no se rinde)</span>
+        <span class="chev"></span>
+      </button>
+      <div class="disclosure-body">
       <div class="form-row">
         <label for="m-desc">Descripción</label>
         <input id="m-desc" type="text" placeholder="Ej: Almuerzo personal">
@@ -310,6 +324,7 @@ h1,h2,h3{font-weight:700;margin:0}
         </div>
       </div>
       <button class="btn btn-primary" id="m-add">Registrar gasto</button>
+      </div>
     </div>
 
     <div class="disclosure" id="m-disclosure">
@@ -963,12 +978,17 @@ document.querySelectorAll(".nav-btn[data-tab]").forEach(function(btn){
 });
 document.getElementById("nav-config").addEventListener("click", openSettingsModal);
 
-// --- disclosures (listas colapsadas por defecto) ---
-document.getElementById("r-disclosure-btn").addEventListener("click", function(){
-  document.getElementById("r-disclosure").classList.toggle("open");
-});
-document.getElementById("m-disclosure-btn").addEventListener("click", function(){
-  document.getElementById("m-disclosure").classList.toggle("open");
+// --- disclosures (todo colapsado por defecto para que entre en pantalla) ---
+[
+  ["r-add-disclosure-btn", "r-add-disclosure"],
+  ["r-disclosure-btn", "r-disclosure"],
+  ["m-add-disclosure-btn", "m-add-disclosure"],
+  ["m-gasto-disclosure-btn", "m-gasto-disclosure"],
+  ["m-disclosure-btn", "m-disclosure"]
+].forEach(function(pair){
+  document.getElementById(pair[0]).addEventListener("click", function(){
+    document.getElementById(pair[1]).classList.toggle("open");
+  });
 });
 
 function renderAll(){
