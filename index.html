@@ -29,13 +29,15 @@ html{font-size:18px}
 @media (max-width:380px){ html{font-size:16px} }
 @media (min-width:600px){ html{font-size:17px} }
 *{box-sizing:border-box}
+html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;margin:0;width:100%;overflow-x:hidden}
 h1,h2,h3{font-weight:700;margin:0}
 
-.wrap{max-width:560px;margin:0 auto;padding:0 16px 112px;padding-block-start:14px}
-.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px}
-.topbar h1{font-size:1.4rem;font-weight:800;line-height:1.15;letter-spacing:-.01em}
-.topbar .tag{font-size:.78rem;color:var(--muted)}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px;padding-block-start:calc(12px + env(safe-area-inset-top,0px));height:100%;height:100dvh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px;flex:0 0 auto}
+.topbar h1{font-size:1.3rem;font-weight:800;line-height:1.15;letter-spacing:-.01em}
+.topbar .tag{font-size:.76rem;color:var(--muted)}
+.screen-area{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:88px}
 
 /* nav inferior fija */
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,transparent,var(--bg) 30%)}
@@ -178,14 +180,14 @@ h1,h2,h3{font-weight:700;margin:0}
 <div class="wrap" id="app-wrap" hidden>
   <div class="topbar">
     <div style="min-width:0">
-      <h1>Rendiciones</h1>
-      <span class="tag">finanzas personales</span>
+      <h1 id="screen-title">Resumen</h1>
+      <span class="tag" id="screen-tag">finanzas personales</span>
     </div>
   </div>
-      </svg>
-    </button>
-  </div>
 
+  <div class="screen-area" id="screen-area">
+
+  <div class="panel active" id="panel-resumen">
   <div class="hero-card">
     <div class="hero-top">
       <div class="hero-top-text">
@@ -217,8 +219,9 @@ h1,h2,h3{font-weight:700;margin:0}
   <div style="display:none" id="bal-total-holder"><span id="bal-total">$0</span></div>
 
   <div class="pending-strip" id="pending-strip"></div>
+  </div>
 
-  <div class="panel active" id="panel-rendiciones">
+  <div class="panel" id="panel-rendiciones">
     <div class="disclosure" id="r-add-disclosure">
       <button class="disclosure-btn" id="r-add-disclosure-btn">
         <span>+ Nuevo gasto a rendir</span>
@@ -342,15 +345,21 @@ h1,h2,h3{font-weight:700;margin:0}
       </div>
     </div>
   </div>
+
+  </div>
 </div>
 
 <div class="bottom-nav">
   <div class="bottom-nav-inner">
-    <button class="nav-btn active" data-tab="rendiciones">
+    <button class="nav-btn active" data-tab="resumen" data-title="Resumen" data-tag="finanzas personales">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>
+      Resumen
+    </button>
+    <button class="nav-btn" data-tab="rendiciones" data-title="Rendiciones" data-tag="gastos a rendir">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
       Rendiciones
     </button>
-    <button class="nav-btn" data-tab="movimientos">
+    <button class="nav-btn" data-tab="movimientos" data-title="Movimientos" data-tag="ATM y gastos propios">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
       Movimientos
     </button>
@@ -974,6 +983,9 @@ document.querySelectorAll(".nav-btn[data-tab]").forEach(function(btn){
     document.querySelectorAll(".nav-btn[data-tab]").forEach(function(b){ b.classList.toggle("active", b===btn); });
     document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
     document.getElementById("panel-"+btn.dataset.tab).classList.add("active");
+    document.getElementById("screen-title").textContent = btn.dataset.title;
+    document.getElementById("screen-tag").textContent = btn.dataset.tag;
+    document.getElementById("screen-area").scrollTop = 0;
   });
 });
 document.getElementById("nav-config").addEventListener("click", openSettingsModal);
