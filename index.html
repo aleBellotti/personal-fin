@@ -58,8 +58,9 @@ h1,h2,h3{font-weight:700;margin:0}
 /* --- hero: tarjeta con anillo de progreso, acento menta --- */
 .hero-card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:22px 20px;margin-bottom:12px}
 .hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.hero-top-text{min-width:0;flex:1}
 .hero-label{font-size:.76rem;color:var(--muted);margin-bottom:6px}
-.hero-value{font-family:'JetBrains Mono',monospace;font-size:2.15rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;color:var(--ink)}
+.hero-value{font-family:'JetBrains Mono',monospace;font-size:1.9rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;color:var(--ink);overflow-wrap:break-word}
 .hero-sub{font-size:.76rem;color:var(--muted);margin-top:4px}
 .ring{position:relative;width:72px;height:72px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
 .ring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--mint) calc(var(--pct,0) * 1%), var(--surface-2) 0)}
@@ -176,7 +177,7 @@ h1,h2,h3{font-weight:700;margin:0}
 
 <div class="wrap" id="app-wrap" hidden>
   <div class="topbar">
-    <div>
+    <div style="min-width:0">
       <h1>Rendiciones</h1>
       <span class="tag">finanzas personales</span>
     </div>
@@ -187,7 +188,7 @@ h1,h2,h3{font-weight:700;margin:0}
 
   <div class="hero-card">
     <div class="hero-top">
-      <div>
+      <div class="hero-top-text">
         <div class="hero-label">Proyectado (disponible + pendiente de cobrar)</div>
         <div class="hero-value" id="sum-total">$0</div>
         <div class="hero-sub" id="sum-total-sub">Disponible ahora: $0</div>
