@@ -192,7 +192,33 @@ h1,h2,h3{font-weight:700;margin:0}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap">
 
-<div class="wrap">
+<style>
+.auth-wrap{max-width:360px;margin:0 auto;padding:60px 16px}
+.auth-card{background:var(--surface);border-radius:22px;padding:26px 22px;box-shadow:0 14px 34px -14px rgba(8,12,24,.25)}
+.auth-card h1{font-size:1.3rem;margin-bottom:4px}
+.auth-card .tag{font-size:.78rem;color:var(--muted);margin-bottom:20px;display:block}
+.auth-error{font-size:.8rem;color:var(--bad);margin:8px 0 0;min-height:1em}
+.auth-switch{text-align:center;font-size:.8rem;color:var(--muted);margin-top:14px}
+.auth-switch button{border:none;background:none;color:var(--navy);font-weight:700;cursor:pointer;font-family:inherit;padding:0}
+.logout-row{margin-top:4px}
+</style>
+
+<div class="auth-wrap" id="auth-wrap">
+  <div class="auth-card">
+    <h1>Rendiciones</h1>
+    <span class="tag">iniciá sesión para sincronizar tus datos</span>
+    <div class="form-row"><label for="auth-email">Email</label><input id="auth-email" type="email" autocomplete="username"></div>
+    <div class="form-row"><label for="auth-pass">Contraseña</label><input id="auth-pass" type="password" autocomplete="current-password"></div>
+    <p class="auth-error" id="auth-error"></p>
+    <button class="btn btn-primary" id="auth-submit" style="margin-top:6px">Ingresar</button>
+    <div class="auth-switch">
+      <span id="auth-switch-text">¿No tenés cuenta?</span>
+      <button id="auth-switch-btn" type="button">Crear cuenta</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="app-wrap" hidden>
   <div class="topbar">
     <div>
       <h1>Rendiciones</h1>
@@ -357,11 +383,18 @@ h1,h2,h3{font-weight:700;margin:0}
 <div id="modal-root"></div>
 
 <script>
-(function(){
+function initApp(currentUser){
 "use strict";
 
 var STORAGE_KEY = "rendiciones_v2";
 var state = { expenses: [], movements: [], settings: { saldoInicialCiti: 0, saldoInicialCash: 0 }, seeded:false };
+
+// --- persistencia en Firestore (1 documento por usuario), con caché local
+// para que la pantalla no quede en blanco mientras se conecta ---
+var db = firebase.firestore();
+var docRef = db.collection("usuarios").doc(currentUser.uid);
+var saveTimer = null;
+var applyingRemote = false;
 
 function load(){
   try{
@@ -370,9 +403,32 @@ function load(){
   }catch(e){}
   return false;
 }
-function save(){
+function cacheLocal(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
 }
+function save(){
+  cacheLocal();
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){
+    docRef.set({
+      expenses: state.expenses,
+      movements: state.movements,
+      settings: state.settings
+    }).catch(function(err){ console.error("Error guardando en Firestore:", err); });
+  }, 400);
+}
+
+docRef.onSnapshot(function(snap){
+  if(!snap.exists) return;
+  var data = snap.data();
+  applyingRemote = true;
+  state.expenses = data.expenses || [];
+  state.movements = data.movements || [];
+  state.settings = data.settings || { saldoInicialCiti: 0, saldoInicialCash: 0 };
+  cacheLocal();
+  renderAll();
+  applyingRemote = false;
+}, function(err){ console.error("Error escuchando Firestore:", err); });
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
@@ -729,7 +785,10 @@ function openSettingsModal(){
       '<div class="modal">' +
         '<div class="modal-head"><h3>Configuración</h3><button class="modal-close" id="modal-close">&times;</button></div>' +
         '<div class="modal-body">' +
-          '<div class="section-title">Saldos iniciales</div>' +
+          '<div class="section-title">Cuenta</div>' +
+          '<p class="hint-text">Conectado como ' + escapeHtml(currentUser.email) + '. Tus datos se sincronizan solos entre dispositivos.</p>' +
+          '<button class="btn btn-ghost logout-row" id="logout-btn" style="width:100%">Cerrar sesión</button>' +
+          '<div class="section-title" style="margin-top:14px">Saldos iniciales</div>' +
           '<div class="form-grid">' +
             '<div class="form-row"><label>CITI</label><input id="set-citi" type="number" step="0.01"></div>' +
             '<div class="form-row"><label>Efectivo</label><input id="set-cash" type="number" step="0.01"></div>' +
@@ -756,6 +815,9 @@ function openSettingsModal(){
   document.getElementById("modal-cancel").addEventListener("click", closeModal);
   document.getElementById("btn-exportar").addEventListener("click", openExportModal);
   document.getElementById("btn-importar").addEventListener("click", openImportModal);
+  document.getElementById("logout-btn").addEventListener("click", function(){
+    firebase.auth().signOut();
+  });
   document.getElementById("modal-save").addEventListener("click", function(){
     state.settings.saldoInicialCiti = parseFloat(document.getElementById("set-citi").value) || 0;
     state.settings.saldoInicialCash = parseFloat(document.getElementById("set-cash").value) || 0;
@@ -952,6 +1014,96 @@ function renderAll(){
 
 document.getElementById("r-fecha").value = todayISO();
 renderAll();
+
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+"use strict";
+
+var firebaseConfig = {
+  apiKey: "AIzaSyD13spJ7Wl8TglxCmAOtiFAdjDNo4XyitI",
+  authDomain: "personal-fin-f524c.firebaseapp.com",
+  projectId: "personal-fin-f524c",
+  storageBucket: "personal-fin-f524c.firebasestorage.app",
+  messagingSenderId: "62293973381",
+  appId: "1:62293973381:web:653f56380cfec125db4cec"
+};
+firebase.initializeApp(firebaseConfig);
+
+var authWrap = document.getElementById("auth-wrap");
+var appWrap = document.getElementById("app-wrap");
+var emailInput = document.getElementById("auth-email");
+var passInput = document.getElementById("auth-pass");
+var errorEl = document.getElementById("auth-error");
+var submitBtn = document.getElementById("auth-submit");
+var switchBtn = document.getElementById("auth-switch-btn");
+var switchText = document.getElementById("auth-switch-text");
+var mode = "login"; // "login" | "signup"
+var appStarted = false;
+
+function authMessage(code){
+  var map = {
+    "auth/invalid-email": "Email inválido.",
+    "auth/user-not-found": "No existe una cuenta con ese email.",
+    "auth/wrong-password": "Contraseña incorrecta.",
+    "auth/invalid-credential": "Email o contraseña incorrectos.",
+    "auth/email-already-in-use": "Ya existe una cuenta con ese email.",
+    "auth/weak-password": "La contraseña necesita al menos 6 caracteres."
+  };
+  return map[code] || "Ocurrió un error. Probá de nuevo.";
+}
+
+switchBtn.addEventListener("click", function(){
+  mode = (mode === "login") ? "signup" : "login";
+  submitBtn.textContent = (mode === "login") ? "Ingresar" : "Crear cuenta";
+  switchText.textContent = (mode === "login") ? "¿No tenés cuenta?" : "¿Ya tenés cuenta?";
+  switchBtn.textContent = (mode === "login") ? "Crear cuenta" : "Ingresar";
+  errorEl.textContent = "";
+});
+
+submitBtn.addEventListener("click", function(){
+  var email = emailInput.value.trim();
+  var pass = passInput.value;
+  errorEl.textContent = "";
+  if(!email || !pass){ errorEl.textContent = "Completá email y contraseña."; return; }
+  submitBtn.disabled = true;
+  var action = (mode === "login")
+    ? firebase.auth().signInWithEmailAndPassword(email, pass)
+    : firebase.auth().createUserWithEmailAndPassword(email, pass);
+  action.catch(function(err){
+    errorEl.textContent = authMessage(err.code);
+  }).finally(function(){
+    submitBtn.disabled = false;
+  });
+});
+
+[emailInput, passInput].forEach(function(el){
+  el.addEventListener("keydown", function(ev){
+    if(ev.key === "Enter") submitBtn.click();
+  });
+});
+
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){
+    authWrap.hidden = true;
+    appWrap.hidden = false;
+    if(!appStarted){
+      appStarted = true;
+      initApp(user);
+    }
+  } else {
+    appStarted = false;
+    authWrap.hidden = false;
+    appWrap.hidden = true;
+    emailInput.value = "";
+    passInput.value = "";
+  }
+});
 
 })();
 </script>
