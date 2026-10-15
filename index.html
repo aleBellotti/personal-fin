@@ -68,18 +68,13 @@ h1,h2,h3{font-weight:700;margin:0}
 .ring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--mint) calc(var(--pct,0) * 1%), var(--surface-2) 0)}
 .ring::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--surface)}
 .ring span{position:relative;font-size:.68rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
-.hero-chips{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.hero-chip{flex:1;min-width:0;background:var(--surface-2);border-radius:10px;padding:6px 8px}
-.hero-chip .label{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:1px}
-.hero-chip .value{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:break-word;color:var(--ink)}
-
 /* --- tarjetas de cuenta --- */
-.balances{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:8px}
-.balance-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:11px 13px;min-width:0}
+.balances{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.balance-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0}
 .balance-card .value{color:var(--mint)}
-.balance-card .label{font-size:.68rem;color:var(--muted);margin-bottom:3px;font-weight:600}
-.balance-card .value{font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700;overflow-wrap:break-word}
-.balance-card .bar{height:4px;border-radius:99px;background:var(--surface-2);margin-top:7px;overflow:hidden}
+.balance-card .label{font-size:.74rem;color:var(--muted);margin-bottom:5px;font-weight:600}
+.balance-card .value{font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-variant-numeric:tabular-nums;font-weight:700;overflow-wrap:break-word}
+.balance-card .bar{height:5px;border-radius:99px;background:var(--surface-2);margin-top:9px;overflow:hidden}
 .balance-card .bar-fill{height:100%;border-radius:99px;background:var(--mint);opacity:.8}
 
 .pending-strip{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
@@ -198,9 +193,9 @@ h1,h2,h3{font-weight:700;margin:0}
       </div>
       <div class="ring" id="hero-ring" style="--pct:0"><span id="hero-ring-pct">0%</span></div>
     </div>
-    <div class="hero-chips" id="hero-chips"></div>
   </div>
 
+  <div class="section-title">Tus cuentas</div>
   <div class="balances" id="balances-grid"></div>
   <div style="display:none" id="bal-total-holder"><span id="bal-total">$0</span></div>
 
@@ -524,12 +519,6 @@ function renderBalances(){
   pct = Math.max(0, Math.min(100, pct));
   document.getElementById("hero-ring").style.setProperty("--pct", pct);
   document.getElementById("hero-ring-pct").textContent = pct + "%";
-
-  document.getElementById("hero-chips").innerHTML =
-    ACCOUNTS.map(function(a){
-      return '<div class="hero-chip"><div class="label">'+a.label+'</div><div class="value">'+fmt(b[a.id])+'</div></div>';
-    }).join("") +
-    '<div class="hero-chip"><div class="label">Pendiente</div><div class="value">'+fmt(pendiente)+'</div></div>';
 
   var mayor = Math.max.apply(null, ACCOUNTS.map(function(a){ return Math.abs(b[a.id]); }).concat([1]));
   document.getElementById("balances-grid").innerHTML =
