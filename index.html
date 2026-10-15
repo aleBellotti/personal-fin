@@ -74,11 +74,11 @@ h1,h2,h3{font-weight:700;margin:0}
 .hero-chip .value{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:break-word;color:var(--ink)}
 
 /* --- tarjetas de cuenta --- */
-.balances{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.balances{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:8px}
 .balance-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:11px 13px;min-width:0}
-.balance-card.citi .value,.balance-card.cash .value{color:var(--mint)}
+.balance-card .value{color:var(--mint)}
 .balance-card .label{font-size:.68rem;color:var(--muted);margin-bottom:3px;font-weight:600}
-.balance-card .value{font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700}
+.balance-card .value{font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-variant-numeric:tabular-nums;font-weight:700;overflow-wrap:break-word}
 .balance-card .bar{height:4px;border-radius:99px;background:var(--surface-2);margin-top:7px;overflow:hidden}
 .balance-card .bar-fill{height:100%;border-radius:99px;background:var(--mint);opacity:.8}
 
@@ -198,25 +198,10 @@ h1,h2,h3{font-weight:700;margin:0}
       </div>
       <div class="ring" id="hero-ring" style="--pct:0"><span id="hero-ring-pct">0%</span></div>
     </div>
-    <div class="hero-chips">
-      <div class="hero-chip"><div class="label">CITI</div><div class="value" id="sum-citi">$0</div></div>
-      <div class="hero-chip"><div class="label">Efectivo</div><div class="value" id="sum-cash">$0</div></div>
-      <div class="hero-chip"><div class="label">Pendiente</div><div class="value" id="sum-pendiente">$0</div></div>
-    </div>
+    <div class="hero-chips" id="hero-chips"></div>
   </div>
 
-  <div class="balances">
-    <div class="balance-card citi">
-      <div class="label">CITI</div>
-      <div class="value" id="bal-citi">$0</div>
-      <div class="bar"><div class="bar-fill" id="bal-citi-bar" style="width:0%"></div></div>
-    </div>
-    <div class="balance-card cash">
-      <div class="label">Efectivo</div>
-      <div class="value" id="bal-cash">$0</div>
-      <div class="bar"><div class="bar-fill" id="bal-cash-bar" style="width:0%"></div></div>
-    </div>
-  </div>
+  <div class="balances" id="balances-grid"></div>
   <div style="display:none" id="bal-total-holder"><span id="bal-total">$0</span></div>
 
   <div class="pending-strip" id="pending-strip"></div>
@@ -259,10 +244,7 @@ h1,h2,h3{font-weight:700;margin:0}
       </label>
       <div class="form-row" id="r-cuenta-row">
         <label for="r-cuenta">¿Con qué cuenta?</label>
-        <select id="r-cuenta">
-          <option value="citi">Tarjeta CITI</option>
-          <option value="cash">Efectivo</option>
-        </select>
+        <select id="r-cuenta"></select>
       </div>
       <button class="btn btn-primary" id="r-add">Cargar gasto</button>
       </div>
@@ -289,18 +271,25 @@ h1,h2,h3{font-weight:700;margin:0}
   <div class="panel" id="panel-movimientos">
     <div class="disclosure" id="m-add-disclosure">
       <button class="disclosure-btn" id="m-add-disclosure-btn">
-        <span>+ Extracción / depósito ATM</span>
+        <span>+ Transferir entre cuentas</span>
         <span class="chev"></span>
       </button>
       <div class="disclosure-body">
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="transfer-desde">Desde</label>
+          <select id="transfer-desde"></select>
+        </div>
+        <div class="form-row">
+          <label for="transfer-hacia">Hacia</label>
+          <select id="transfer-hacia"></select>
+        </div>
+      </div>
       <div class="form-row">
-        <label for="atm-monto">Monto a mover</label>
-        <input id="atm-monto" type="number" step="0.01" placeholder="0.00">
+        <label for="transfer-monto">Monto a mover</label>
+        <input id="transfer-monto" type="number" step="0.01" placeholder="0.00">
       </div>
-      <div class="btn-row">
-        <button class="btn btn-ghost" id="atm-retiro" style="flex:1">CITI → Efectivo (retiro)</button>
-        <button class="btn btn-ghost" id="atm-deposito" style="flex:1">Efectivo → CITI (depósito)</button>
-      </div>
+      <button class="btn btn-primary" id="transfer-add">Transferir</button>
       </div>
     </div>
 
@@ -321,10 +310,7 @@ h1,h2,h3{font-weight:700;margin:0}
         </div>
         <div class="form-row">
           <label for="m-cuenta">Cuenta</label>
-          <select id="m-cuenta">
-            <option value="citi">CITI</option>
-            <option value="cash">Efectivo</option>
-          </select>
+          <select id="m-cuenta"></select>
         </div>
       </div>
       <button class="btn btn-primary" id="m-add">Registrar gasto</button>
@@ -337,11 +323,7 @@ h1,h2,h3{font-weight:700;margin:0}
         <span class="chev"></span>
       </button>
       <div class="disclosure-body">
-        <div class="filters" id="m-filters">
-          <button class="filter-chip active" data-filter="todos">Todos</button>
-          <button class="filter-chip" data-filter="citi">CITI</button>
-          <button class="filter-chip" data-filter="cash">Efectivo</button>
-        </div>
+        <div class="filters" id="m-filters"></div>
         <div id="m-list"></div>
       </div>
     </div>
@@ -378,7 +360,25 @@ function initApp(currentUser){
 "use strict";
 
 var STORAGE_KEY = "rendiciones_v2";
-var state = { expenses: [], movements: [], settings: { saldoInicialCiti: 0, saldoInicialCash: 0 }, seeded:false };
+var ACCOUNTS = [
+  { id:"citi", label:"CITI", settingsKey:"saldoInicialCiti" },
+  { id:"cash", label:"Efectivo", settingsKey:"saldoInicialCash" },
+  { id:"mp", label:"Mercado Pago", settingsKey:"saldoInicialMp" }
+];
+function defaultSettings(){
+  var s = {};
+  ACCOUNTS.forEach(function(a){ s[a.settingsKey] = 0; });
+  return s;
+}
+function accountLabel(id){
+  var a = ACCOUNTS.find(function(a){ return a.id === id; });
+  return a ? a.label : id;
+}
+function populateCuentaSelect(sel){
+  sel.innerHTML = ACCOUNTS.map(function(a){ return '<option value="'+a.id+'">'+a.label+'</option>'; }).join("");
+}
+
+var state = { expenses: [], movements: [], settings: defaultSettings(), seeded:false };
 
 // --- persistencia en Firestore (1 documento por usuario), con caché local
 // para que la pantalla no quede en blanco mientras se conecta ---
@@ -415,7 +415,8 @@ docRef.onSnapshot(function(snap){
   applyingRemote = true;
   state.expenses = data.expenses || [];
   state.movements = data.movements || [];
-  state.settings = data.settings || { saldoInicialCiti: 0, saldoInicialCash: 0 };
+  state.settings = data.settings || defaultSettings();
+  ACCOUNTS.forEach(function(a){ if(state.settings[a.settingsKey]===undefined) state.settings[a.settingsKey] = 0; });
   cacheLocal();
   renderAll();
   applyingRemote = false;
@@ -442,33 +443,37 @@ function escapeHtml(s){
 function seed(){
   state.expenses = [];
   state.movements = [];
-  state.settings = { saldoInicialCiti: 0, saldoInicialCash: 0 };
+  state.settings = defaultSettings();
   save();
 }
 
 if(!load()){ seed(); }
-if(!state.settings){ state.settings = { saldoInicialCiti: 0, saldoInicialCash: 0 }; }
+if(!state.settings){ state.settings = defaultSettings(); }
+ACCOUNTS.forEach(function(a){ if(state.settings[a.settingsKey]===undefined) state.settings[a.settingsKey] = 0; });
 
 // --- balance calculation ---
 function computeBalances(){
-  var citi = Number(state.settings.saldoInicialCiti)||0;
-  var cash = Number(state.settings.saldoInicialCash)||0;
+  var bal = {};
+  ACCOUNTS.forEach(function(a){ bal[a.id] = Number(state.settings[a.settingsKey])||0; });
   state.expenses.forEach(function(e){
     if(e.estado === "pagado"){
-      citi += Number(e.monto)||0; // el cobro siempre entra por CITI
+      bal.citi += Number(e.monto)||0; // el cobro siempre entra por CITI
     }
   });
   state.movements.forEach(function(m){
     var amt = Number(m.monto)||0;
-    if(m.tipo === "atm_retiro"){ citi -= amt; cash += amt; }
-    else if(m.tipo === "atm_deposito"){ cash -= amt; citi += amt; }
+    if(m.tipo === "transferencia"){
+      if(bal[m.cuentaOrigen] !== undefined) bal[m.cuentaOrigen] -= amt;
+      if(bal[m.cuentaDestino] !== undefined) bal[m.cuentaDestino] += amt;
+    } else if(m.tipo === "atm_retiro"){ bal.citi -= amt; bal.cash += amt; } // histórico
+    else if(m.tipo === "atm_deposito"){ bal.cash -= amt; bal.citi += amt; } // histórico
     else if(m.tipo === "gasto"){
-      if(m.cuenta === "citi") citi -= amt;
-      else cash -= amt;
+      if(bal[m.cuenta] !== undefined) bal[m.cuenta] -= amt;
     }
     // cobro_rendicion ya está contado arriba vía estado "pagado"; es solo historial
   });
-  return {citi:citi, cash:cash, total:citi+cash};
+  bal.total = ACCOUNTS.reduce(function(sum,a){ return sum + bal[a.id]; }, 0);
+  return bal;
 }
 
 function computePendiente(){
@@ -481,15 +486,10 @@ function computePendiente(){
 
 function renderBalances(){
   var b = computeBalances();
-  document.getElementById("bal-citi").textContent = fmt(b.citi);
-  document.getElementById("bal-cash").textContent = fmt(b.cash);
   document.getElementById("bal-total").textContent = fmt(b.total);
 
   var pendiente = computePendiente();
   var proyectado = b.total + pendiente;
-  document.getElementById("sum-citi").textContent = fmt(b.citi);
-  document.getElementById("sum-cash").textContent = fmt(b.cash);
-  document.getElementById("sum-pendiente").textContent = fmt(pendiente);
   document.getElementById("sum-total").textContent = fmt(proyectado);
   document.getElementById("sum-total-sub").textContent = "Disponible ahora: " + fmt(b.total);
 
@@ -498,9 +498,24 @@ function renderBalances(){
   document.getElementById("hero-ring").style.setProperty("--pct", pct);
   document.getElementById("hero-ring-pct").textContent = pct + "%";
 
-  var mayor = Math.max(Math.abs(b.citi), Math.abs(b.cash), 1);
-  document.getElementById("bal-citi-bar").style.width = Math.min(100, Math.abs(b.citi)/mayor*100) + "%";
-  document.getElementById("bal-cash-bar").style.width = Math.min(100, Math.abs(b.cash)/mayor*100) + "%";
+  document.getElementById("hero-chips").innerHTML =
+    ACCOUNTS.map(function(a){
+      return '<div class="hero-chip"><div class="label">'+a.label+'</div><div class="value">'+fmt(b[a.id])+'</div></div>';
+    }).join("") +
+    '<div class="hero-chip"><div class="label">Pendiente</div><div class="value">'+fmt(pendiente)+'</div></div>';
+
+  var mayor = Math.max.apply(null, ACCOUNTS.map(function(a){ return Math.abs(b[a.id]); }).concat([1]));
+  document.getElementById("balances-grid").innerHTML =
+    ACCOUNTS.map(function(a){
+      var pctBar = Math.min(100, Math.abs(b[a.id])/mayor*100);
+      return (
+        '<div class="balance-card '+a.id+'">' +
+          '<div class="label">'+a.label+'</div>' +
+          '<div class="value">'+fmt(b[a.id])+'</div>' +
+          '<div class="bar"><div class="bar-fill" style="width:'+pctBar+'%"></div></div>' +
+        '</div>'
+      );
+    }).join("");
 }
 
 function renderPendingStrip(){
@@ -547,9 +562,8 @@ function renderExpenses(){
     actions += '<button class="btn btn-ghost btn-sm btn-danger" data-action="eliminar" data-id="'+e.id+'">Eliminar</button>';
     var codeLine = e.codigo ? '<span class="item-code">'+e.codigo+'</span>' : '';
     var tipoPill = e.tipo ? '<span class="pill pill-tipo">'+e.tipo+'</span>' : '';
-    var cuentaLabel = {citi:"CITI", cash:"Efectivo"};
     var origenLine = e.pagadoPorMi
-      ? '<span class="item-date">Lo pagué yo · '+cuentaLabel[e.cuenta]+'</span>'
+      ? '<span class="item-date">Lo pagué yo · '+accountLabel(e.cuenta)+'</span>'
       : '<span class="item-date">Pagado directo por la empresa</span>';
     var titulo = e.desc ? escapeHtml(e.desc) : escapeHtml(e.categoria);
     return (
@@ -577,6 +591,12 @@ document.getElementById("r-filters").addEventListener("click", function(ev){
   this.querySelectorAll(".filter-chip").forEach(function(c){ c.classList.toggle("active", c===btn); });
   renderExpenses();
 });
+
+populateCuentaSelect(document.getElementById("r-cuenta"));
+populateCuentaSelect(document.getElementById("m-cuenta"));
+populateCuentaSelect(document.getElementById("transfer-desde"));
+populateCuentaSelect(document.getElementById("transfer-hacia"));
+document.getElementById("transfer-hacia").value = ACCOUNTS[1] ? ACCOUNTS[1].id : ACCOUNTS[0].id;
 
 document.getElementById("r-propio").addEventListener("change", function(){
   document.getElementById("r-cuenta-row").hidden = !this.checked;
@@ -706,7 +726,7 @@ function openEditarModal(exp){
           '</label>' +
           '<div class="form-row" id="edit-cuenta-row">' +
             '<label>¿Con qué cuenta?</label>' +
-            '<select id="edit-cuenta"><option value="citi">Tarjeta CITI</option><option value="cash">Efectivo</option></select>' +
+            '<select id="edit-cuenta"></select>' +
           '</div>' +
         '</div>' +
         '<div class="modal-foot">' +
@@ -716,6 +736,7 @@ function openEditarModal(exp){
       '</div>' +
     '</div>';
 
+  populateCuentaSelect(document.getElementById("edit-cuenta"));
   document.getElementById("edit-desc").value = exp.desc;
   document.getElementById("edit-monto").value = exp.monto;
   document.getElementById("edit-fecha").value = exp.fecha;
@@ -786,10 +807,7 @@ function openSettingsModal(){
           '<p class="hint-text">Conectado como ' + escapeHtml(currentUser.email) + '. Tus datos se sincronizan solos entre dispositivos.</p>' +
           '<button class="btn btn-ghost logout-row" id="logout-btn" style="width:100%">Cerrar sesión</button>' +
           '<div class="section-title" style="margin-top:14px">Saldos iniciales</div>' +
-          '<div class="form-grid">' +
-            '<div class="form-row"><label>CITI</label><input id="set-citi" type="number" step="0.01"></div>' +
-            '<div class="form-row"><label>Efectivo</label><input id="set-cash" type="number" step="0.01"></div>' +
-          '</div>' +
+          '<div class="form-grid" id="set-saldos-grid"></div>' +
           '<div class="section-title" style="margin-top:6px">Respaldo de datos</div>' +
           '<p class="hint-text">Movés tus gastos y movimientos entre dispositivos (por ejemplo, de la PC al celular) copiando y pegando este texto.</p>' +
           '<div class="btn-row">' +
@@ -804,8 +822,13 @@ function openSettingsModal(){
       '</div>' +
     '</div>';
 
-  document.getElementById("set-citi").value = state.settings.saldoInicialCiti || 0;
-  document.getElementById("set-cash").value = state.settings.saldoInicialCash || 0;
+  var saldosGrid = document.getElementById("set-saldos-grid");
+  saldosGrid.innerHTML = ACCOUNTS.map(function(a){
+    return '<div class="form-row"><label>'+a.label+'</label><input id="set-'+a.id+'" type="number" step="0.01"></div>';
+  }).join("");
+  ACCOUNTS.forEach(function(a){
+    document.getElementById("set-"+a.id).value = state.settings[a.settingsKey] || 0;
+  });
 
   bindOverlayClose(document.getElementById("modal-overlay"));
   document.getElementById("modal-close").addEventListener("click", closeModal);
@@ -816,8 +839,9 @@ function openSettingsModal(){
     firebase.auth().signOut();
   });
   document.getElementById("modal-save").addEventListener("click", function(){
-    state.settings.saldoInicialCiti = parseFloat(document.getElementById("set-citi").value) || 0;
-    state.settings.saldoInicialCash = parseFloat(document.getElementById("set-cash").value) || 0;
+    ACCOUNTS.forEach(function(a){
+      state.settings[a.settingsKey] = parseFloat(document.getElementById("set-"+a.id).value) || 0;
+    });
     save();
     closeModal();
     renderAll();
@@ -906,7 +930,8 @@ function openImportModal(){
     }
     state.expenses = parsed.expenses;
     state.movements = parsed.movements;
-    state.settings = parsed.settings || { saldoInicialCiti: 0, saldoInicialCash: 0 };
+    state.settings = parsed.settings || defaultSettings();
+    ACCOUNTS.forEach(function(a){ if(state.settings[a.settingsKey]===undefined) state.settings[a.settingsKey] = 0; });
     save();
     closeModal();
     renderAll();
@@ -920,7 +945,9 @@ var mFilter = "todos";
 function renderMovements(){
   var list = document.getElementById("m-list");
   var items = state.movements.slice().sort(function(a,b){ return b.fecha.localeCompare(a.fecha); });
-  if(mFilter !== "todos") items = items.filter(function(m){ return m.cuenta === mFilter; });
+  if(mFilter !== "todos") items = items.filter(function(m){
+    return m.cuenta === mFilter || m.cuentaOrigen === mFilter || m.cuentaDestino === mFilter;
+  });
   document.getElementById("m-count").textContent = "("+items.length+")";
 
   if(items.length === 0){
@@ -928,11 +955,13 @@ function renderMovements(){
     return;
   }
 
-  var labels = {atm_retiro:"Retiro ATM", atm_deposito:"Depósito ATM", gasto:"Gasto", cobro_rendicion:"Cobro rendición"};
-  var cuentaLabel = {citi:"CITI", cash:"Efectivo", transfer:"Transferencia interna"};
+  var labels = {atm_retiro:"Retiro ATM", atm_deposito:"Depósito ATM", gasto:"Gasto", cobro_rendicion:"Cobro rendición", transferencia:"Transferencia"};
 
   list.innerHTML = items.map(function(m){
-    var sign = (m.tipo==="gasto") ? "-" : (m.tipo==="atm_retiro"||m.tipo==="atm_deposito") ? "" : "+";
+    var sign = (m.tipo==="gasto") ? "-" : (m.tipo==="atm_retiro"||m.tipo==="atm_deposito"||m.tipo==="transferencia") ? "" : "+";
+    var cuentaTexto = m.tipo === "transferencia"
+      ? accountLabel(m.cuentaOrigen) + " → " + accountLabel(m.cuentaDestino)
+      : accountLabel(m.cuenta);
     return (
       '<div class="item">' +
         '<div class="item-top">' +
@@ -941,7 +970,7 @@ function renderMovements(){
         '</div>' +
         '<div class="item-meta">' +
           '<span class="pill pill-tipo">'+labels[m.tipo]+'</span>' +
-          '<span class="item-date">'+fmtDate(m.fecha)+' · '+cuentaLabel[m.cuenta]+'</span>' +
+          '<span class="item-date">'+fmtDate(m.fecha)+' · '+cuentaTexto+'</span>' +
         '</div>' +
         '<div class="item-actions">' +
           '<button class="btn btn-ghost btn-sm btn-danger" data-action="eliminar-mov" data-id="'+m.id+'">Eliminar</button>' +
@@ -962,6 +991,10 @@ document.getElementById("m-list").addEventListener("click", function(ev){
   save(); renderAll();
 });
 
+document.getElementById("m-filters").innerHTML =
+  '<button class="filter-chip active" data-filter="todos">Todos</button>' +
+  ACCOUNTS.map(function(a){ return '<button class="filter-chip" data-filter="'+a.id+'">'+a.label+'</button>'; }).join("");
+
 document.getElementById("m-filters").addEventListener("click", function(ev){
   var btn = ev.target.closest(".filter-chip");
   if(!btn) return;
@@ -970,20 +1003,19 @@ document.getElementById("m-filters").addEventListener("click", function(ev){
   renderMovements();
 });
 
-document.getElementById("atm-retiro").addEventListener("click", function(){
-  var monto = parseFloat(document.getElementById("atm-monto").value);
+document.getElementById("transfer-add").addEventListener("click", function(){
+  var monto = parseFloat(document.getElementById("transfer-monto").value);
+  var origen = document.getElementById("transfer-desde").value;
+  var destino = document.getElementById("transfer-hacia").value;
   if(!monto || monto<=0) return;
-  state.movements.push({id:uid(), tipo:"atm_retiro", desc:"Retiro ATM", monto:monto, fecha:todayISO(), cuenta:"transfer"});
+  if(origen === destino) return;
+  state.movements.push({
+    id:uid(), tipo:"transferencia", cuentaOrigen:origen, cuentaDestino:destino,
+    desc:"Transferencia " + accountLabel(origen) + " → " + accountLabel(destino),
+    monto:monto, fecha:todayISO()
+  });
   save();
-  document.getElementById("atm-monto").value = "";
-  renderAll();
-});
-document.getElementById("atm-deposito").addEventListener("click", function(){
-  var monto = parseFloat(document.getElementById("atm-monto").value);
-  if(!monto || monto<=0) return;
-  state.movements.push({id:uid(), tipo:"atm_deposito", desc:"Depósito ATM", monto:monto, fecha:todayISO(), cuenta:"transfer"});
-  save();
-  document.getElementById("atm-monto").value = "";
+  document.getElementById("transfer-monto").value = "";
   renderAll();
 });
 document.getElementById("m-add").addEventListener("click", function(){
