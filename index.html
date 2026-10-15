@@ -69,14 +69,6 @@ h1,h2,h3{font-weight:700;margin:0}
 .ring::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--surface)}
 .ring span{position:relative;font-size:.68rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
 /* --- tarjetas de cuenta --- */
-.balances{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
-.balance-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0}
-.balance-card .value{color:var(--mint)}
-.balance-card .label{font-size:.74rem;color:var(--muted);margin-bottom:5px;font-weight:600}
-.balance-card .value{font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-variant-numeric:tabular-nums;font-weight:700;overflow-wrap:break-word}
-.balance-card .bar{height:5px;border-radius:99px;background:var(--surface-2);margin-top:9px;overflow:hidden}
-.balance-card .bar-fill{height:100%;border-radius:99px;background:var(--mint);opacity:.8}
-
 .plus-card{display:flex;align-items:center;gap:11px;background:var(--warn-bg);border:1px solid var(--warn);border-radius:16px;padding:12px 14px;margin-bottom:14px}
 .plus-icon{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--warn);color:var(--bg);font-weight:800;font-size:1rem;display:flex;align-items:center;justify-content:center}
 .plus-text{flex:1;min-width:0}
@@ -88,6 +80,12 @@ h1,h2,h3{font-weight:700;margin:0}
 .plus-breakdown{border-top:1px solid var(--warn);margin-top:10px;padding-top:9px;opacity:.85}
 .plus-row{display:flex;justify-content:space-between;font-size:.76rem;color:var(--warn);padding:2px 0;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
 .plus-row span:first-child{font-family:'Inter',sans-serif;color:var(--muted)}
+.plus-mint{background:var(--good-bg);border-color:var(--mint)}
+.plus-mint .plus-icon{background:var(--mint);color:var(--mint-ink)}
+.plus-mint .plus-text .label{color:var(--mint)}
+.plus-mint .value{color:var(--mint)}
+.plus-mint .plus-breakdown{border-top-color:var(--mint)}
+.plus-mint .plus-row{color:var(--mint)}
 
 .pending-strip{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
 .pending-chip{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 11px;font-size:.7rem;color:var(--muted);display:flex;gap:6px;align-items:center}
@@ -148,7 +146,6 @@ h1,h2,h3{font-weight:700;margin:0}
 @keyframes modal-pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.modal-overlay,.modal{animation:none}}
 @media (max-width:360px){
-  .balances{grid-template-columns:1fr}
   .hero-value{font-size:1.85rem}
   .form-grid{grid-template-columns:1fr}
 }
@@ -207,9 +204,17 @@ h1,h2,h3{font-weight:700;margin:0}
     </div>
   </div>
 
-  <div class="section-title">Tus cuentas</div>
-  <div class="balances" id="balances-grid"></div>
-  <div style="display:none" id="bal-total-holder"><span id="bal-total">$0</span></div>
+  <div class="plus-card plus-card-detail plus-mint" id="cuentas-card">
+    <div class="plus-card-head">
+      <div class="plus-icon">$</div>
+      <div class="plus-text">
+        <div class="label">Disponible ahora</div>
+        <div class="sub">Suma de todas tus cuentas</div>
+      </div>
+      <div class="value" id="bal-total">$0</div>
+    </div>
+    <div class="plus-breakdown" id="cuentas-breakdown"></div>
+  </div>
 
   <div class="plus-card plus-card-detail" id="pendiente-card">
     <div class="plus-card-head">
@@ -618,17 +623,9 @@ function renderBalances(){
   document.getElementById("hero-ring").style.setProperty("--pct", pct);
   document.getElementById("hero-ring-pct").textContent = pct + "%";
 
-  var mayor = Math.max.apply(null, ACCOUNTS.map(function(a){ return Math.abs(b[a.id]); }).concat([1]));
-  document.getElementById("balances-grid").innerHTML =
+  document.getElementById("cuentas-breakdown").innerHTML =
     ACCOUNTS.map(function(a){
-      var pctBar = Math.min(100, Math.abs(b[a.id])/mayor*100);
-      return (
-        '<div class="balance-card '+a.id+'">' +
-          '<div class="label">'+a.label+'</div>' +
-          '<div class="value">'+fmt(b[a.id])+'</div>' +
-          '<div class="bar"><div class="bar-fill" style="width:'+pctBar+'%"></div></div>' +
-        '</div>'
-      );
+      return '<div class="plus-row"><span>'+a.label+'</span><span>'+fmt(b[a.id])+'</span></div>';
     }).join("");
 }
 
