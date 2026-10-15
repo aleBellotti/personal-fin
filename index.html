@@ -101,6 +101,7 @@ h1,h2,h3{font-weight:700;margin:0}
 .btn-primary{background:var(--mint);color:var(--mint-ink);width:100%}
 .btn-ghost{background:var(--surface-2);border:none;color:var(--ink)}
 .btn-sm{padding:8px 12px;font-size:.78rem}
+.btn-danger{color:var(--bad)}
 .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 
 .filters{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px}
@@ -543,6 +544,7 @@ function renderExpenses(){
       actions = '<button class="btn btn-ghost btn-sm" data-action="pagar" data-id="'+e.id+'">Marcar depositado en CITI</button>';
     }
     actions += '<button class="btn btn-ghost btn-sm" data-action="editar" data-id="'+e.id+'">Editar</button>';
+    actions += '<button class="btn btn-ghost btn-sm btn-danger" data-action="eliminar" data-id="'+e.id+'">Eliminar</button>';
     var codeLine = e.codigo ? '<span class="item-code">'+e.codigo+'</span>' : '';
     var tipoPill = e.tipo ? '<span class="pill pill-tipo">'+e.tipo+'</span>' : '';
     var cuentaLabel = {citi:"CITI", cash:"Efectivo"};
@@ -624,6 +626,11 @@ document.getElementById("r-list").addEventListener("click", function(ev){
     save(); renderAll();
   } else if(btn.dataset.action === "editar"){
     openEditarModal(exp);
+  } else if(btn.dataset.action === "eliminar"){
+    if(!confirm("¿Eliminar este gasto? También se borran los movimientos de adelanto/cobro vinculados a él.")) return;
+    state.expenses = state.expenses.filter(function(e){ return e.id !== id; });
+    state.movements = state.movements.filter(function(m){ return m.expenseId !== id; });
+    save(); renderAll();
   }
 });
 
@@ -936,10 +943,24 @@ function renderMovements(){
           '<span class="pill pill-tipo">'+labels[m.tipo]+'</span>' +
           '<span class="item-date">'+fmtDate(m.fecha)+' · '+cuentaLabel[m.cuenta]+'</span>' +
         '</div>' +
+        '<div class="item-actions">' +
+          '<button class="btn btn-ghost btn-sm btn-danger" data-action="eliminar-mov" data-id="'+m.id+'">Eliminar</button>' +
+        '</div>' +
       '</div>'
     );
   }).join("");
 }
+
+document.getElementById("m-list").addEventListener("click", function(ev){
+  var btn = ev.target.closest("button[data-action='eliminar-mov']");
+  if(!btn) return;
+  var mov = state.movements.find(function(m){ return m.id === btn.dataset.id; });
+  if(!mov) return;
+  var warn = mov.expenseId ? " Está vinculado a un gasto a rendir; borrarlo puede desajustar ese saldo." : "";
+  if(!confirm("¿Eliminar este movimiento?" + warn)) return;
+  state.movements = state.movements.filter(function(m){ return m.id !== mov.id; });
+  save(); renderAll();
+});
 
 document.getElementById("m-filters").addEventListener("click", function(ev){
   var btn = ev.target.closest(".filter-chip");
