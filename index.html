@@ -293,6 +293,31 @@ h1,h2,h3{font-weight:700;margin:0}
       </div>
     </div>
 
+    <div class="disclosure" id="m-deposito-disclosure">
+      <button class="disclosure-btn" id="m-deposito-disclosure-btn">
+        <span>+ Depósito externo</span>
+        <span class="chev"></span>
+      </button>
+      <div class="disclosure-body">
+      <p class="hint-text">Plata que entra de afuera (no sale de ninguna otra cuenta tuya): un depósito en efectivo que te hicieron, un regalo, etc.</p>
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="deposito-monto">Monto</label>
+          <input id="deposito-monto" type="number" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-row">
+          <label for="deposito-cuenta">Cuenta destino</label>
+          <select id="deposito-cuenta"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="deposito-desc">Descripción (opcional)</label>
+        <input id="deposito-desc" type="text" placeholder="Ej: Depósito de un cliente">
+      </div>
+      <button class="btn btn-primary" id="deposito-add">Registrar depósito</button>
+      </div>
+    </div>
+
     <div class="disclosure" id="m-gasto-disclosure">
       <button class="disclosure-btn" id="m-gasto-disclosure-btn">
         <span>+ Gasto personal (no se rinde)</span>
@@ -469,6 +494,8 @@ function computeBalances(){
     else if(m.tipo === "atm_deposito"){ bal.cash -= amt; bal.citi += amt; } // histórico
     else if(m.tipo === "gasto"){
       if(bal[m.cuenta] !== undefined) bal[m.cuenta] -= amt;
+    } else if(m.tipo === "deposito_externo"){
+      if(bal[m.cuenta] !== undefined) bal[m.cuenta] += amt;
     }
     // cobro_rendicion ya está contado arriba vía estado "pagado"; es solo historial
   });
@@ -596,6 +623,7 @@ populateCuentaSelect(document.getElementById("r-cuenta"));
 populateCuentaSelect(document.getElementById("m-cuenta"));
 populateCuentaSelect(document.getElementById("transfer-desde"));
 populateCuentaSelect(document.getElementById("transfer-hacia"));
+populateCuentaSelect(document.getElementById("deposito-cuenta"));
 document.getElementById("transfer-hacia").value = ACCOUNTS[1] ? ACCOUNTS[1].id : ACCOUNTS[0].id;
 
 document.getElementById("r-propio").addEventListener("change", function(){
@@ -955,7 +983,7 @@ function renderMovements(){
     return;
   }
 
-  var labels = {atm_retiro:"Retiro ATM", atm_deposito:"Depósito ATM", gasto:"Gasto", cobro_rendicion:"Cobro rendición", transferencia:"Transferencia"};
+  var labels = {atm_retiro:"Retiro ATM", atm_deposito:"Depósito ATM", gasto:"Gasto", cobro_rendicion:"Cobro rendición", transferencia:"Transferencia", deposito_externo:"Depósito externo"};
 
   list.innerHTML = items.map(function(m){
     var sign = (m.tipo==="gasto") ? "-" : (m.tipo==="atm_retiro"||m.tipo==="atm_deposito"||m.tipo==="transferencia") ? "" : "+";
@@ -1018,6 +1046,22 @@ document.getElementById("transfer-add").addEventListener("click", function(){
   document.getElementById("transfer-monto").value = "";
   renderAll();
 });
+
+document.getElementById("deposito-add").addEventListener("click", function(){
+  var monto = parseFloat(document.getElementById("deposito-monto").value);
+  var cuenta = document.getElementById("deposito-cuenta").value;
+  var desc = document.getElementById("deposito-desc").value.trim();
+  if(!monto || monto<=0) return;
+  state.movements.push({
+    id:uid(), tipo:"deposito_externo", cuenta:cuenta,
+    desc: desc || ("Depósito externo en " + accountLabel(cuenta)),
+    monto:monto, fecha:todayISO()
+  });
+  save();
+  document.getElementById("deposito-monto").value = "";
+  document.getElementById("deposito-desc").value = "";
+  renderAll();
+});
 document.getElementById("m-add").addEventListener("click", function(){
   var desc = document.getElementById("m-desc").value.trim();
   var monto = parseFloat(document.getElementById("m-monto").value);
@@ -1048,6 +1092,7 @@ document.getElementById("nav-config").addEventListener("click", openSettingsModa
   ["r-add-disclosure-btn", "r-add-disclosure"],
   ["r-disclosure-btn", "r-disclosure"],
   ["m-add-disclosure-btn", "m-add-disclosure"],
+  ["m-deposito-disclosure-btn", "m-deposito-disclosure"],
   ["m-gasto-disclosure-btn", "m-gasto-disclosure"],
   ["m-disclosure-btn", "m-disclosure"]
 ].forEach(function(pair){
