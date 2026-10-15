@@ -83,6 +83,11 @@ h1,h2,h3{font-weight:700;margin:0}
 .plus-text .label{font-size:.82rem;font-weight:700;color:var(--warn)}
 .plus-text .sub{font-size:.68rem;color:var(--muted);margin-top:1px}
 .plus-card .value{font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--warn);flex:0 0 auto}
+.plus-card-detail{flex-direction:column;align-items:stretch;gap:0}
+.plus-card-head{display:flex;align-items:center;gap:11px}
+.plus-breakdown{border-top:1px solid var(--warn);margin-top:10px;padding-top:9px;opacity:.85}
+.plus-row{display:flex;justify-content:space-between;font-size:.76rem;color:var(--warn);padding:2px 0;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.plus-row span:first-child{font-family:'Inter',sans-serif;color:var(--muted)}
 
 .pending-strip{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
 .pending-chip{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 11px;font-size:.7rem;color:var(--muted);display:flex;gap:6px;align-items:center}
@@ -206,13 +211,19 @@ h1,h2,h3{font-weight:700;margin:0}
   <div class="balances" id="balances-grid"></div>
   <div style="display:none" id="bal-total-holder"><span id="bal-total">$0</span></div>
 
-  <div class="plus-card" id="pendiente-card">
-    <div class="plus-icon">+</div>
-    <div class="plus-text">
-      <div class="label">Pendiente de cobrar</div>
-      <div class="sub">Se suma al Proyectado cuando la empresa te pague</div>
+  <div class="plus-card plus-card-detail" id="pendiente-card">
+    <div class="plus-card-head">
+      <div class="plus-icon">+</div>
+      <div class="plus-text">
+        <div class="label">Pendiente de cobrar</div>
+        <div class="sub">Se suma al Proyectado cuando te paguen</div>
+      </div>
+      <div class="value" id="pendiente-valor">$0</div>
     </div>
-    <div class="value" id="pendiente-valor">$0</div>
+    <div class="plus-breakdown">
+      <div class="plus-row"><span>Rendiciones</span><span id="pendiente-rendiciones">$0</span></div>
+      <div class="plus-row"><span>Trabajos extra</span><span id="pendiente-extras">$0</span></div>
+    </div>
   </div>
 
   <div class="pending-strip" id="pending-strip"></div>
@@ -592,11 +603,15 @@ function renderBalances(){
   var b = computeBalances();
   document.getElementById("bal-total").textContent = fmt(b.total);
 
-  var pendiente = computePendiente();
+  var pendienteRendiciones = computePendiente();
+  var pendienteExtras = computeExtrasPendiente();
+  var pendiente = pendienteRendiciones + pendienteExtras;
   var proyectado = b.total + pendiente;
   document.getElementById("sum-total").textContent = fmt(proyectado);
   document.getElementById("sum-total-sub").textContent = "Disponible ahora: " + fmt(b.total);
   document.getElementById("pendiente-valor").textContent = "+ " + fmt(pendiente);
+  document.getElementById("pendiente-rendiciones").textContent = "+ " + fmt(pendienteRendiciones);
+  document.getElementById("pendiente-extras").textContent = "+ " + fmt(pendienteExtras);
 
   var pct = proyectado > 0 ? Math.round((b.total / proyectado) * 100) : 0;
   pct = Math.max(0, Math.min(100, pct));
