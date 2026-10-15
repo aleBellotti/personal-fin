@@ -77,6 +77,13 @@ h1,h2,h3{font-weight:700;margin:0}
 .balance-card .bar{height:5px;border-radius:99px;background:var(--surface-2);margin-top:9px;overflow:hidden}
 .balance-card .bar-fill{height:100%;border-radius:99px;background:var(--mint);opacity:.8}
 
+.plus-card{display:flex;align-items:center;gap:11px;background:var(--warn-bg);border:1px solid var(--warn);border-radius:16px;padding:12px 14px;margin-bottom:14px}
+.plus-icon{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--warn);color:var(--bg);font-weight:800;font-size:1rem;display:flex;align-items:center;justify-content:center}
+.plus-text{flex:1;min-width:0}
+.plus-text .label{font-size:.82rem;font-weight:700;color:var(--warn)}
+.plus-text .sub{font-size:.68rem;color:var(--muted);margin-top:1px}
+.plus-card .value{font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--warn);flex:0 0 auto}
+
 .pending-strip{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
 .pending-chip{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 11px;font-size:.7rem;color:var(--muted);display:flex;gap:6px;align-items:center}
 .pending-chip b{font-family:'JetBrains Mono',monospace;color:var(--ink)}
@@ -198,6 +205,15 @@ h1,h2,h3{font-weight:700;margin:0}
   <div class="section-title">Tus cuentas</div>
   <div class="balances" id="balances-grid"></div>
   <div style="display:none" id="bal-total-holder"><span id="bal-total">$0</span></div>
+
+  <div class="plus-card" id="pendiente-card">
+    <div class="plus-icon">+</div>
+    <div class="plus-text">
+      <div class="label">Pendiente de cobrar</div>
+      <div class="sub">Se suma al Proyectado cuando la empresa te pague</div>
+    </div>
+    <div class="value" id="pendiente-valor">$0</div>
+  </div>
 
   <div class="pending-strip" id="pending-strip"></div>
   </div>
@@ -514,6 +530,7 @@ function renderBalances(){
   var proyectado = b.total + pendiente;
   document.getElementById("sum-total").textContent = fmt(proyectado);
   document.getElementById("sum-total-sub").textContent = "Disponible ahora: " + fmt(b.total);
+  document.getElementById("pendiente-valor").textContent = "+ " + fmt(pendiente);
 
   var pct = proyectado > 0 ? Math.round((b.total / proyectado) * 100) : 0;
   pct = Math.max(0, Math.min(100, pct));
