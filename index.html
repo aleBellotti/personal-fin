@@ -1432,6 +1432,12 @@ renderAll();
 (function(){
 "use strict";
 
+if(typeof firebase === "undefined"){
+  var gate = document.getElementById("boot-gate");
+  gate.innerHTML = '<p style="color:var(--muted);font-size:.85rem;text-align:center;padding:0 24px">No se pudo conectar. Revisá tu internet y recargá la página.</p>';
+  return;
+}
+
 var firebaseConfig = {
   apiKey: "AIzaSyD13spJ7Wl8TglxCmAOtiFAdjDNo4XyitI",
   authDomain: "personal-fin-f524c.firebaseapp.com",
@@ -1495,8 +1501,17 @@ submitBtn.addEventListener("click", function(){
   });
 });
 
-firebase.auth().onAuthStateChanged(function(user){
+var bootResolved = false;
+function dismissBootGate(){
+  bootResolved = true;
   document.getElementById("boot-gate").hidden = true;
+}
+// seguro: si Firebase no responde (red lenta, falla de carga), no dejar la pantalla
+// de carga trabada para siempre
+setTimeout(function(){ if(!bootResolved) dismissBootGate(); }, 4000);
+
+firebase.auth().onAuthStateChanged(function(user){
+  dismissBootGate();
   if(user){
     authWrap.hidden = true;
     appWrap.hidden = false;
