@@ -37,6 +37,9 @@ h1,h2,h3{font-weight:700;margin:0}
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px;flex:0 0 auto}
 .topbar h1{font-size:1.3rem;font-weight:800;line-height:1.15;letter-spacing:-.01em}
 .topbar .tag{font-size:.76rem;color:var(--muted)}
+.settings-btn{flex:0 0 auto;border:none;background:var(--surface);width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink)}
+.settings-btn svg{width:19px;height:19px;stroke:currentColor;fill:none}
+.settings-btn.active{color:var(--mint)}
 .screen-area{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:88px}
 
 /* nav inferior fija */
@@ -163,11 +166,17 @@ h1,h2,h3{font-weight:700;margin:0}
 .auth-switch{text-align:center;font-size:.8rem;color:var(--muted);margin-top:14px}
 .auth-switch button{border:none;background:none;color:var(--mint);font-weight:700;cursor:pointer;font-family:inherit;padding:0}
 .logout-row{margin-top:4px}
+.boot-gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.boot-ring{width:28px;height:28px;border-radius:50%;border:3px solid var(--surface-2);border-top-color:var(--mint);animation:boot-spin .7s linear infinite}
+@keyframes boot-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.boot-ring{animation:none}}
 </style>
 </head>
 <body>
 
-<div class="auth-wrap" id="auth-wrap">
+<div class="boot-gate" id="boot-gate"><div class="boot-ring"></div></div>
+
+<div class="auth-wrap" id="auth-wrap" hidden>
   <div class="auth-card">
     <h1>Rendiciones</h1>
     <span class="tag">iniciá sesión para sincronizar tus datos</span>
@@ -188,6 +197,9 @@ h1,h2,h3{font-weight:700;margin:0}
       <h1 id="screen-title">Resumen</h1>
       <span class="tag" id="screen-tag">finanzas personales</span>
     </div>
+    <button class="settings-btn" id="toggle-privacidad" aria-label="Mostrar/ocultar importes">
+      <svg id="eye-icon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
   </div>
 
   <div class="screen-area" id="screen-area">
@@ -198,7 +210,7 @@ h1,h2,h3{font-weight:700;margin:0}
       <div class="hero-top-text">
         <div class="hero-label">Proyectado (disponible + pendiente de cobrar)</div>
         <div class="hero-value" id="sum-total">$0</div>
-        <div class="hero-sub" id="sum-total-sub">Disponible ahora: $0</div>
+        <div class="hero-sub">Disponible ahora: <span id="sum-total-sub-valor">$0</span></div>
       </div>
       <div class="ring" id="hero-ring" style="--pct:0"><span id="hero-ring-pct">0%</span></div>
     </div>
@@ -466,6 +478,9 @@ function initApp(currentUser){
 "use strict";
 
 var STORAGE_KEY = "rendiciones_v2";
+var PRIVACY_KEY = "rendiciones_privacidad";
+var saldosOcultos = false;
+try{ saldosOcultos = localStorage.getItem(PRIVACY_KEY) === "1"; }catch(e){}
 var ACCOUNTS = [
   { id:"citi", label:"CITI", settingsKey:"saldoInicialCiti" },
   { id:"cash", label:"Efectivo", settingsKey:"saldoInicialCash" },
@@ -604,19 +619,25 @@ function computeExtrasPendiente(){
   return pendiente;
 }
 
+function maskFmt(n, prefix){
+  prefix = prefix || "";
+  if(saldosOcultos) return prefix + "••••••";
+  return prefix + fmt(n);
+}
+
 function renderBalances(){
   var b = computeBalances();
-  document.getElementById("bal-total").textContent = fmt(b.total);
+  document.getElementById("bal-total").textContent = maskFmt(b.total);
 
   var pendienteRendiciones = computePendiente();
   var pendienteExtras = computeExtrasPendiente();
   var pendiente = pendienteRendiciones + pendienteExtras;
   var proyectado = b.total + pendiente;
-  document.getElementById("sum-total").textContent = fmt(proyectado);
-  document.getElementById("sum-total-sub").textContent = "Disponible ahora: " + fmt(b.total);
-  document.getElementById("pendiente-valor").textContent = "+ " + fmt(pendiente);
-  document.getElementById("pendiente-rendiciones").textContent = "+ " + fmt(pendienteRendiciones);
-  document.getElementById("pendiente-extras").textContent = "+ " + fmt(pendienteExtras);
+  document.getElementById("sum-total").textContent = maskFmt(proyectado);
+  document.getElementById("sum-total-sub-valor").textContent = maskFmt(b.total);
+  document.getElementById("pendiente-valor").textContent = maskFmt(pendiente, "+ ");
+  document.getElementById("pendiente-rendiciones").textContent = maskFmt(pendienteRendiciones, "+ ");
+  document.getElementById("pendiente-extras").textContent = maskFmt(pendienteExtras, "+ ");
 
   var pct = proyectado > 0 ? Math.round((b.total / proyectado) * 100) : 0;
   pct = Math.max(0, Math.min(100, pct));
@@ -625,7 +646,7 @@ function renderBalances(){
 
   document.getElementById("cuentas-breakdown").innerHTML =
     ACCOUNTS.map(function(a){
-      return '<div class="plus-row"><span>'+a.label+'</span><span>'+fmt(b[a.id])+'</span></div>';
+      return '<div class="plus-row"><span>'+a.label+'</span><span>'+maskFmt(b[a.id])+'</span></div>';
     }).join("");
 }
 
@@ -1381,6 +1402,24 @@ function renderAll(){
 
 document.getElementById("r-fecha").value = todayISO();
 document.getElementById("x-fecha").value = todayISO();
+
+function updateEyeIcon(){
+  var btn = document.getElementById("toggle-privacidad");
+  var icon = document.getElementById("eye-icon");
+  btn.classList.toggle("active", saldosOcultos);
+  icon.innerHTML = saldosOcultos
+    ? '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.3 21.3 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.3 21.3 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><path d="M1 1l22 22"></path>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+}
+updateEyeIcon();
+
+document.getElementById("toggle-privacidad").addEventListener("click", function(){
+  saldosOcultos = !saldosOcultos;
+  try{ localStorage.setItem(PRIVACY_KEY, saldosOcultos ? "1" : "0"); }catch(e){}
+  updateEyeIcon();
+  renderBalances();
+});
+
 renderAll();
 
 }
@@ -1457,6 +1496,7 @@ submitBtn.addEventListener("click", function(){
 });
 
 firebase.auth().onAuthStateChanged(function(user){
+  document.getElementById("boot-gate").hidden = true;
   if(user){
     authWrap.hidden = true;
     appWrap.hidden = false;
