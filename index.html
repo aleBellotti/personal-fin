@@ -621,7 +621,11 @@ function computeExtrasPendiente(){
 
 function maskFmt(n, prefix){
   prefix = prefix || "";
-  if(saldosOcultos) return prefix + "••••••";
+  // se relee de localStorage siempre, para no depender de una variable
+  // en memoria que pueda desincronizarse
+  var oculto = false;
+  try{ oculto = localStorage.getItem(PRIVACY_KEY) === "1"; }catch(e){ oculto = saldosOcultos; }
+  if(oculto) return prefix + "••••••";
   return prefix + fmt(n);
 }
 
@@ -636,8 +640,9 @@ function renderBalances(){
   document.getElementById("sum-total").textContent = maskFmt(proyectado);
   document.getElementById("sum-total-sub-valor").textContent = maskFmt(b.total);
   document.getElementById("pendiente-valor").textContent = maskFmt(pendiente, "+ ");
-  document.getElementById("pendiente-rendiciones").textContent = maskFmt(pendienteRendiciones, "+ ");
-  document.getElementById("pendiente-extras").textContent = maskFmt(pendienteExtras, "+ ");
+  // el desglose (rendiciones/extras, y cuentas abajo) queda siempre visible
+  document.getElementById("pendiente-rendiciones").textContent = "+ " + fmt(pendienteRendiciones);
+  document.getElementById("pendiente-extras").textContent = "+ " + fmt(pendienteExtras);
 
   var pct = proyectado > 0 ? Math.round((b.total / proyectado) * 100) : 0;
   pct = Math.max(0, Math.min(100, pct));
@@ -646,7 +651,7 @@ function renderBalances(){
 
   document.getElementById("cuentas-breakdown").innerHTML =
     ACCOUNTS.map(function(a){
-      return '<div class="plus-row"><span>'+a.label+'</span><span>'+maskFmt(b[a.id])+'</span></div>';
+      return '<div class="plus-row"><span>'+a.label+'</span><span>'+fmt(b[a.id])+'</span></div>';
     }).join("");
 }
 
@@ -1273,7 +1278,7 @@ function renderMovements(){
   var labels = {atm_retiro:"Retiro ATM", atm_deposito:"Depósito ATM", gasto:"Gasto", cobro_rendicion:"Cobro rendición", transferencia:"Transferencia", deposito_externo:"Depósito externo"};
 
   list.innerHTML = items.map(function(m){
-    var sign = (m.tipo==="gasto") ? "-" : (m.tipo==="atm_retiro"||m.tipo==="atm_deposito"||m.tipo==="transferencia") ? "" : "+";
+    var sign = (m.tipo==="gasto") ? "-" : (m.tipo==="atm_retiro"||m.tipo==="atm_deposito"||m.tipo==="transferencia") ? "⇄ " : "+";
     var cuentaTexto = m.tipo === "transferencia"
       ? accountLabel(m.cuentaOrigen) + " → " + accountLabel(m.cuentaDestino)
       : accountLabel(m.cuenta);
@@ -1372,6 +1377,7 @@ document.querySelectorAll(".nav-btn[data-tab]").forEach(function(btn){
     document.getElementById("screen-title").textContent = btn.dataset.title;
     document.getElementById("screen-tag").textContent = btn.dataset.tag;
     document.getElementById("screen-area").scrollTop = 0;
+    if(btn.dataset.tab === "resumen"){ updateEyeIcon(); renderBalances(); }
   });
 });
 document.getElementById("nav-config").addEventListener("click", openSettingsModal);
