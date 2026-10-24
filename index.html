@@ -45,7 +45,7 @@ h1,h2,h3{font-weight:700;margin:0}
 /* nav inferior fija */
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,transparent,var(--bg) 30%)}
 .bottom-nav-inner{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:7px;width:100%;max-width:520px;box-shadow:0 10px 30px -10px rgba(0,0,0,.6)}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;padding:9px 2px;border-radius:14px;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.62rem;font-weight:600;min-width:0}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:transparent;padding:8px 1px;border-radius:13px;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.56rem;font-weight:600;min-width:0}
 .nav-btn svg{width:19px;height:19px;stroke:currentColor;fill:none}
 .nav-btn.active{color:var(--mint-ink);background:var(--mint)}
 
@@ -89,6 +89,13 @@ h1,h2,h3{font-weight:700;margin:0}
 .plus-mint .value{color:var(--mint)}
 .plus-mint .plus-breakdown{border-top-color:var(--mint)}
 .plus-mint .plus-row{color:var(--mint)}
+
+.objetivo-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.objetivo-nums{display:flex;align-items:baseline;gap:8px;min-width:0}
+.objetivo-nums span:first-child{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.objetivo-pct{font-size:.78rem;color:var(--mint);font-weight:700}
+.bar{height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:var(--mint)}
 
 .pending-strip{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
 .pending-chip{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 11px;font-size:.7rem;color:var(--muted);display:flex;gap:6px;align-items:center}
@@ -443,6 +450,67 @@ h1,h2,h3{font-weight:700;margin:0}
     </div>
   </div>
 
+  <div class="panel" id="panel-dolares">
+    <div class="plus-card plus-card-detail plus-mint" id="usd-card">
+      <div class="plus-card-head">
+        <div class="plus-icon">U$</div>
+        <div class="plus-text">
+          <div class="label">Saldo en dólares</div>
+          <div class="sub">Suma de Banco, Mercado Pago y Efectivo</div>
+        </div>
+        <div class="value" id="usd-total">US$0</div>
+      </div>
+      <div class="plus-breakdown" id="usd-breakdown"></div>
+    </div>
+
+    <div class="card" id="usd-objetivo-card">
+      <h2>Objetivo</h2>
+      <div class="objetivo-row">
+        <div class="objetivo-nums">
+          <span id="usd-objetivo-valor">US$0</span>
+          <span class="objetivo-pct" id="usd-objetivo-pct">0%</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="usd-objetivo-editar">Editar</button>
+      </div>
+      <div class="bar"><div class="bar-fill" id="usd-objetivo-bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="disclosure" id="usd-add-disclosure">
+      <button class="disclosure-btn" id="usd-add-disclosure-btn">
+        <span>+ Agregar saldo</span>
+        <span class="chev"></span>
+      </button>
+      <div class="disclosure-body">
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="usd-monto">Monto (USD)</label>
+          <input id="usd-monto" type="number" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-row">
+          <label for="usd-cuenta">Cuenta</label>
+          <select id="usd-cuenta"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="usd-desc">Descripción (opcional)</label>
+        <input id="usd-desc" type="text" placeholder="Ej: Ahorro del mes">
+      </div>
+      <button class="btn btn-primary" id="usd-add">Agregar</button>
+      </div>
+    </div>
+
+    <div class="disclosure" id="usd-disclosure">
+      <button class="disclosure-btn" id="usd-disclosure-btn">
+        <span>Ver movimientos <span class="count" id="usd-count"></span></span>
+        <span class="chev"></span>
+      </button>
+      <div class="disclosure-body">
+        <div class="filters" id="usd-filters"></div>
+        <div id="usd-list"></div>
+      </div>
+    </div>
+  </div>
+
   </div>
 </div>
 
@@ -463,6 +531,10 @@ h1,h2,h3{font-weight:700;margin:0}
     <button class="nav-btn" data-tab="extras" data-title="Extras" data-tag="trabajos pendientes de cobrar">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
       Extras
+    </button>
+    <button class="nav-btn" data-tab="dolares" data-title="Dólares" data-tag="ahorro en USD">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2.5 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"></path></svg>
+      Dólares
     </button>
     <button class="nav-btn" id="nav-config">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -499,7 +571,25 @@ function populateCuentaSelect(sel){
   sel.innerHTML = ACCOUNTS.map(function(a){ return '<option value="'+a.id+'">'+a.label+'</option>'; }).join("");
 }
 
-var state = { expenses: [], movements: [], trabajos: [], settings: defaultSettings(), seeded:false };
+var USD_ACCOUNTS = [
+  { id:"banco", label:"Banco" },
+  { id:"mp", label:"Mercado Pago" },
+  { id:"efectivo", label:"Efectivo" }
+];
+function usdAccountLabel(id){
+  var a = USD_ACCOUNTS.find(function(a){ return a.id === id; });
+  return a ? a.label : id;
+}
+function populateUsdCuentaSelect(sel){
+  sel.innerHTML = USD_ACCOUNTS.map(function(a){ return '<option value="'+a.id+'">'+a.label+'</option>'; }).join("");
+}
+function defaultUsd(){ return { objetivo: 0, movimientos: [] }; }
+function fmtUsd(n){
+  var v = Number(n)||0;
+  return "US$" + v.toLocaleString("es-AR",{minimumFractionDigits:0,maximumFractionDigits:0});
+}
+
+var state = { expenses: [], movements: [], trabajos: [], usd: defaultUsd(), settings: defaultSettings(), seeded:false };
 
 // --- persistencia en Firestore (1 documento por usuario), con caché local
 // para que la pantalla no quede en blanco mientras se conecta ---
@@ -526,6 +616,7 @@ function save(){
       expenses: state.expenses,
       movements: state.movements,
       trabajos: state.trabajos,
+      usd: state.usd,
       settings: state.settings
     }).catch(function(err){ console.error("Error guardando en Firestore:", err); });
   }, 400);
@@ -538,6 +629,7 @@ docRef.onSnapshot(function(snap){
   state.expenses = data.expenses || [];
   state.movements = data.movements || [];
   state.trabajos = data.trabajos || [];
+  state.usd = data.usd || defaultUsd();
   state.settings = data.settings || defaultSettings();
   ACCOUNTS.forEach(function(a){ if(state.settings[a.settingsKey]===undefined) state.settings[a.settingsKey] = 0; });
   cacheLocal();
@@ -567,12 +659,15 @@ function seed(){
   state.expenses = [];
   state.movements = [];
   state.trabajos = [];
+  state.usd = defaultUsd();
   state.settings = defaultSettings();
   save();
 }
 
 if(!load()){ seed(); }
 if(!state.trabajos){ state.trabajos = []; }
+if(!state.usd){ state.usd = defaultUsd(); }
+if(!state.usd.movimientos){ state.usd.movimientos = []; }
 if(!state.settings){ state.settings = defaultSettings(); }
 ACCOUNTS.forEach(function(a){ if(state.settings[a.settingsKey]===undefined) state.settings[a.settingsKey] = 0; });
 
@@ -733,6 +828,7 @@ populateCuentaSelect(document.getElementById("transfer-desde"));
 populateCuentaSelect(document.getElementById("transfer-hacia"));
 populateCuentaSelect(document.getElementById("deposito-cuenta"));
 document.getElementById("transfer-hacia").value = ACCOUNTS[1] ? ACCOUNTS[1].id : ACCOUNTS[0].id;
+populateUsdCuentaSelect(document.getElementById("usd-cuenta"));
 
 document.getElementById("r-propio").addEventListener("change", function(){
   document.getElementById("r-cuenta-row").hidden = !this.checked;
@@ -1067,6 +1163,7 @@ function openImportModal(){
     state.expenses = parsed.expenses;
     state.movements = parsed.movements;
     state.trabajos = Array.isArray(parsed.trabajos) ? parsed.trabajos : [];
+    state.usd = parsed.usd || defaultUsd();
     state.settings = parsed.settings || defaultSettings();
     ACCOUNTS.forEach(function(a){ if(state.settings[a.settingsKey]===undefined) state.settings[a.settingsKey] = 0; });
     save();
@@ -1257,6 +1354,123 @@ function openEditarTrabajoModal(trabajo){
   });
 }
 
+// --- dólares ---
+var usdFilter = "todos";
+
+function computeUsdBalances(){
+  var bal = {};
+  USD_ACCOUNTS.forEach(function(a){ bal[a.id] = 0; });
+  state.usd.movimientos.forEach(function(m){
+    if(bal[m.cuenta] !== undefined) bal[m.cuenta] += Number(m.monto)||0;
+  });
+  bal.total = USD_ACCOUNTS.reduce(function(sum,a){ return sum + bal[a.id]; }, 0);
+  return bal;
+}
+
+function renderUsd(){
+  var bal = computeUsdBalances();
+  document.getElementById("usd-total").textContent = fmtUsd(bal.total);
+  document.getElementById("usd-breakdown").innerHTML =
+    USD_ACCOUNTS.map(function(a){
+      return '<div class="plus-row"><span>'+a.label+'</span><span>'+fmtUsd(bal[a.id])+'</span></div>';
+    }).join("");
+
+  var objetivo = Number(state.usd.objetivo)||0;
+  document.getElementById("usd-objetivo-valor").textContent = fmtUsd(objetivo);
+  var pct = objetivo > 0 ? Math.round((bal.total / objetivo) * 100) : 0;
+  pct = Math.max(0, Math.min(100, pct));
+  document.getElementById("usd-objetivo-pct").textContent = pct + "%";
+  document.getElementById("usd-objetivo-bar").style.width = pct + "%";
+
+  var list = document.getElementById("usd-list");
+  var items = state.usd.movimientos.slice().sort(function(a,b){ return b.fecha.localeCompare(a.fecha); });
+  if(usdFilter !== "todos") items = items.filter(function(m){ return m.cuenta === usdFilter; });
+  document.getElementById("usd-count").textContent = "("+items.length+")";
+
+  if(items.length === 0){
+    list.innerHTML = '<div class="empty">No hay movimientos en este filtro.</div>';
+  } else {
+    list.innerHTML = items.map(function(m){
+      return (
+        '<div class="item">' +
+          '<div class="item-top">' +
+            '<div class="item-desc">'+escapeHtml(m.desc || ("Saldo agregado en " + usdAccountLabel(m.cuenta)))+'</div>' +
+            '<div class="item-amount">+ '+fmtUsd(m.monto)+'</div>' +
+          '</div>' +
+          '<div class="item-meta">' +
+            '<span class="pill pill-tipo">'+usdAccountLabel(m.cuenta)+'</span>' +
+            '<span class="item-date">'+fmtDate(m.fecha)+'</span>' +
+          '</div>' +
+          '<div class="item-actions">' +
+            '<button class="btn btn-ghost btn-sm btn-danger" data-action="eliminar-usd" data-id="'+m.id+'">Eliminar</button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join("");
+  }
+}
+
+document.getElementById("usd-filters").innerHTML =
+  '<button class="filter-chip active" data-filter="todos">Todos</button>' +
+  USD_ACCOUNTS.map(function(a){ return '<button class="filter-chip" data-filter="'+a.id+'">'+a.label+'</button>'; }).join("");
+
+document.getElementById("usd-filters").addEventListener("click", function(ev){
+  var btn = ev.target.closest(".filter-chip");
+  if(!btn) return;
+  usdFilter = btn.dataset.filter;
+  this.querySelectorAll(".filter-chip").forEach(function(c){ c.classList.toggle("active", c===btn); });
+  renderUsd();
+});
+
+document.getElementById("usd-add").addEventListener("click", function(){
+  var monto = parseFloat(document.getElementById("usd-monto").value);
+  var cuenta = document.getElementById("usd-cuenta").value;
+  var desc = document.getElementById("usd-desc").value.trim();
+  if(!monto || monto<=0) return;
+  state.usd.movimientos.push({ id:uid(), cuenta:cuenta, monto:monto, desc:desc, fecha:todayISO() });
+  save();
+  document.getElementById("usd-monto").value = "";
+  document.getElementById("usd-desc").value = "";
+  renderAll();
+});
+
+document.getElementById("usd-list").addEventListener("click", function(ev){
+  var btn = ev.target.closest("button[data-action='eliminar-usd']");
+  if(!btn) return;
+  if(!confirm("¿Eliminar este movimiento en dólares?")) return;
+  state.usd.movimientos = state.usd.movimientos.filter(function(m){ return m.id !== btn.dataset.id; });
+  save(); renderAll();
+});
+
+document.getElementById("usd-objetivo-editar").addEventListener("click", function(){
+  var root = document.getElementById("modal-root");
+  root.innerHTML =
+    '<div class="modal-overlay" id="modal-overlay">' +
+      '<div class="modal">' +
+        '<div class="modal-head"><h3>Objetivo en dólares</h3><button class="modal-close" id="modal-close">&times;</button></div>' +
+        '<div class="modal-body">' +
+          '<div class="form-row"><label>Monto objetivo (USD)</label><input id="objetivo-monto" type="number" step="0.01"></div>' +
+        '</div>' +
+        '<div class="modal-foot">' +
+          '<button class="btn btn-ghost" id="modal-cancel" style="flex:1">Cancelar</button>' +
+          '<button class="btn btn-primary" id="modal-save" style="flex:1">Guardar</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById("objetivo-monto").value = state.usd.objetivo || 0;
+
+  bindOverlayClose(document.getElementById("modal-overlay"));
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+  document.getElementById("modal-cancel").addEventListener("click", closeModal);
+  document.getElementById("modal-save").addEventListener("click", function(){
+    state.usd.objetivo = parseFloat(document.getElementById("objetivo-monto").value) || 0;
+    save();
+    closeModal();
+    renderAll();
+  });
+});
+
 // --- movimientos tab ---
 var mFilter = "todos";
 
@@ -1389,7 +1603,9 @@ document.getElementById("nav-config").addEventListener("click", openSettingsModa
   ["m-gasto-disclosure-btn", "m-gasto-disclosure"],
   ["m-disclosure-btn", "m-disclosure"],
   ["x-add-disclosure-btn", "x-add-disclosure"],
-  ["x-disclosure-btn", "x-disclosure"]
+  ["x-disclosure-btn", "x-disclosure"],
+  ["usd-add-disclosure-btn", "usd-add-disclosure"],
+  ["usd-disclosure-btn", "usd-disclosure"]
 ].forEach(function(pair){
   document.getElementById(pair[0]).addEventListener("click", function(){
     document.getElementById(pair[1]).classList.toggle("open");
@@ -1402,6 +1618,7 @@ function renderAll(){
   renderExpenses();
   renderMovements();
   renderTrabajos();
+  renderUsd();
 }
 
 document.getElementById("r-fecha").value = todayISO();
