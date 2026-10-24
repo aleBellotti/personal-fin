@@ -1504,7 +1504,7 @@ submitBtn.addEventListener("click", function(){
 var bootResolved = false;
 function dismissBootGate(){
   bootResolved = true;
-  document.getElementById("boot-gate").hidden = true;
+  document.getElementById("boot-gate").style.display = "none";
 }
 // seguro: si Firebase no responde (red lenta, falla de carga), no dejar la pantalla
 // de carga trabada para siempre
