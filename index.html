@@ -45,8 +45,8 @@ h1,h2,h3{font-weight:700;margin:0}
 /* nav inferior fija */
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,transparent,var(--bg) 30%)}
 .bottom-nav-inner{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:7px;width:100%;max-width:520px;box-shadow:0 10px 30px -10px rgba(0,0,0,.6)}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:transparent;padding:8px 1px;border-radius:13px;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.56rem;font-weight:600;min-width:0}
-.nav-btn svg{width:19px;height:19px;stroke:currentColor;fill:none}
+.nav-btn{flex:1;display:flex;align-items:center;justify-content:center;border:none;background:transparent;padding:11px 2px;border-radius:14px;color:var(--muted);cursor:pointer;min-width:0}
+.nav-btn svg{width:21px;height:21px;stroke:currentColor;fill:none}
 .nav-btn.active{color:var(--mint-ink);background:var(--mint)}
 
 .panel{display:none}
@@ -233,6 +233,18 @@ h1,h2,h3{font-weight:700;margin:0}
       <div class="value" id="bal-total">$0</div>
     </div>
     <div class="plus-breakdown" id="cuentas-breakdown"></div>
+  </div>
+
+  <div class="plus-card plus-card-detail plus-mint" id="resumen-usd-card">
+    <div class="plus-card-head">
+      <div class="plus-icon">U$</div>
+      <div class="plus-text">
+        <div class="label">Saldo en dólares</div>
+        <div class="sub">Banco, Mercado Pago y Efectivo</div>
+      </div>
+      <div class="value" id="resumen-usd-total">US$0</div>
+    </div>
+    <div class="plus-breakdown" id="resumen-usd-breakdown"></div>
   </div>
 
   <div class="plus-card plus-card-detail" id="pendiente-card">
@@ -499,6 +511,30 @@ h1,h2,h3{font-weight:700;margin:0}
       </div>
     </div>
 
+    <div class="disclosure" id="usd-gasto-disclosure">
+      <button class="disclosure-btn" id="usd-gasto-disclosure-btn">
+        <span>+ Gasto o pago</span>
+        <span class="chev"></span>
+      </button>
+      <div class="disclosure-body">
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="usd-gasto-monto">Monto (USD)</label>
+          <input id="usd-gasto-monto" type="number" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-row">
+          <label for="usd-gasto-cuenta">Cuenta</label>
+          <select id="usd-gasto-cuenta"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="usd-gasto-desc">Descripción</label>
+        <input id="usd-gasto-desc" type="text" placeholder="Ej: Compra online">
+      </div>
+      <button class="btn btn-primary" id="usd-gasto-add">Registrar gasto</button>
+      </div>
+    </div>
+
     <div class="disclosure" id="usd-disclosure">
       <button class="disclosure-btn" id="usd-disclosure-btn">
         <span>Ver movimientos <span class="count" id="usd-count"></span></span>
@@ -516,29 +552,23 @@ h1,h2,h3{font-weight:700;margin:0}
 
 <div class="bottom-nav">
   <div class="bottom-nav-inner">
-    <button class="nav-btn active" data-tab="resumen" data-title="Resumen" data-tag="finanzas personales">
+    <button class="nav-btn active" data-tab="resumen" data-title="Resumen" data-tag="finanzas personales" aria-label="Resumen" title="Resumen">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>
-      Resumen
     </button>
-    <button class="nav-btn" data-tab="rendiciones" data-title="Rendiciones" data-tag="gastos a rendir">
+    <button class="nav-btn" data-tab="rendiciones" data-title="Rendiciones" data-tag="gastos a rendir" aria-label="Rendiciones" title="Rendiciones">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-      Rendiciones
     </button>
-    <button class="nav-btn" data-tab="movimientos" data-title="Movimientos" data-tag="ATM y gastos propios">
+    <button class="nav-btn" data-tab="movimientos" data-title="Movimientos" data-tag="ATM y gastos propios" aria-label="Movimientos" title="Movimientos">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-      Movimientos
     </button>
-    <button class="nav-btn" data-tab="extras" data-title="Extras" data-tag="trabajos pendientes de cobrar">
+    <button class="nav-btn" data-tab="extras" data-title="Extras" data-tag="trabajos pendientes de cobrar" aria-label="Extras" title="Extras">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-      Extras
     </button>
-    <button class="nav-btn" data-tab="dolares" data-title="Dólares" data-tag="ahorro en USD">
+    <button class="nav-btn" data-tab="dolares" data-title="Dólares" data-tag="ahorro en USD" aria-label="Dólares" title="Dólares">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2.5 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"></path></svg>
-      Dólares
     </button>
-    <button class="nav-btn" id="nav-config">
+    <button class="nav-btn" id="nav-config" aria-label="Configuración" title="Configuración">
       <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-      Config
     </button>
   </div>
 </div>
@@ -829,6 +859,7 @@ populateCuentaSelect(document.getElementById("transfer-hacia"));
 populateCuentaSelect(document.getElementById("deposito-cuenta"));
 document.getElementById("transfer-hacia").value = ACCOUNTS[1] ? ACCOUNTS[1].id : ACCOUNTS[0].id;
 populateUsdCuentaSelect(document.getElementById("usd-cuenta"));
+populateUsdCuentaSelect(document.getElementById("usd-gasto-cuenta"));
 
 document.getElementById("r-propio").addEventListener("change", function(){
   document.getElementById("r-cuenta-row").hidden = !this.checked;
@@ -1361,7 +1392,9 @@ function computeUsdBalances(){
   var bal = {};
   USD_ACCOUNTS.forEach(function(a){ bal[a.id] = 0; });
   state.usd.movimientos.forEach(function(m){
-    if(bal[m.cuenta] !== undefined) bal[m.cuenta] += Number(m.monto)||0;
+    if(bal[m.cuenta] === undefined) return;
+    var amt = Number(m.monto)||0;
+    bal[m.cuenta] += (m.tipo === "gasto") ? -amt : amt;
   });
   bal.total = USD_ACCOUNTS.reduce(function(sum,a){ return sum + bal[a.id]; }, 0);
   return bal;
@@ -1371,6 +1404,12 @@ function renderUsd(){
   var bal = computeUsdBalances();
   document.getElementById("usd-total").textContent = fmtUsd(bal.total);
   document.getElementById("usd-breakdown").innerHTML =
+    USD_ACCOUNTS.map(function(a){
+      return '<div class="plus-row"><span>'+a.label+'</span><span>'+fmtUsd(bal[a.id])+'</span></div>';
+    }).join("");
+
+  document.getElementById("resumen-usd-total").textContent = fmtUsd(bal.total);
+  document.getElementById("resumen-usd-breakdown").innerHTML =
     USD_ACCOUNTS.map(function(a){
       return '<div class="plus-row"><span>'+a.label+'</span><span>'+fmtUsd(bal[a.id])+'</span></div>';
     }).join("");
@@ -1391,13 +1430,16 @@ function renderUsd(){
     list.innerHTML = '<div class="empty">No hay movimientos en este filtro.</div>';
   } else {
     list.innerHTML = items.map(function(m){
+      var esGasto = m.tipo === "gasto";
+      var defaultDesc = esGasto ? ("Gasto en " + usdAccountLabel(m.cuenta)) : ("Saldo agregado en " + usdAccountLabel(m.cuenta));
       return (
         '<div class="item">' +
           '<div class="item-top">' +
-            '<div class="item-desc">'+escapeHtml(m.desc || ("Saldo agregado en " + usdAccountLabel(m.cuenta)))+'</div>' +
-            '<div class="item-amount">+ '+fmtUsd(m.monto)+'</div>' +
+            '<div class="item-desc">'+escapeHtml(m.desc || defaultDesc)+'</div>' +
+            '<div class="item-amount">'+(esGasto ? "- " : "+ ")+fmtUsd(m.monto)+'</div>' +
           '</div>' +
           '<div class="item-meta">' +
+            '<span class="pill '+(esGasto ? "pill-enviado" : "pill-pagado")+'">'+(esGasto ? "Gasto" : "Ingreso")+'</span>' +
             '<span class="pill pill-tipo">'+usdAccountLabel(m.cuenta)+'</span>' +
             '<span class="item-date">'+fmtDate(m.fecha)+'</span>' +
           '</div>' +
@@ -1427,10 +1469,22 @@ document.getElementById("usd-add").addEventListener("click", function(){
   var cuenta = document.getElementById("usd-cuenta").value;
   var desc = document.getElementById("usd-desc").value.trim();
   if(!monto || monto<=0) return;
-  state.usd.movimientos.push({ id:uid(), cuenta:cuenta, monto:monto, desc:desc, fecha:todayISO() });
+  state.usd.movimientos.push({ id:uid(), tipo:"ingreso", cuenta:cuenta, monto:monto, desc:desc, fecha:todayISO() });
   save();
   document.getElementById("usd-monto").value = "";
   document.getElementById("usd-desc").value = "";
+  renderAll();
+});
+
+document.getElementById("usd-gasto-add").addEventListener("click", function(){
+  var monto = parseFloat(document.getElementById("usd-gasto-monto").value);
+  var cuenta = document.getElementById("usd-gasto-cuenta").value;
+  var desc = document.getElementById("usd-gasto-desc").value.trim();
+  if(!monto || monto<=0) return;
+  state.usd.movimientos.push({ id:uid(), tipo:"gasto", cuenta:cuenta, monto:monto, desc:desc, fecha:todayISO() });
+  save();
+  document.getElementById("usd-gasto-monto").value = "";
+  document.getElementById("usd-gasto-desc").value = "";
   renderAll();
 });
 
@@ -1605,6 +1659,7 @@ document.getElementById("nav-config").addEventListener("click", openSettingsModa
   ["x-add-disclosure-btn", "x-add-disclosure"],
   ["x-disclosure-btn", "x-disclosure"],
   ["usd-add-disclosure-btn", "usd-add-disclosure"],
+  ["usd-gasto-disclosure-btn", "usd-gasto-disclosure"],
   ["usd-disclosure-btn", "usd-disclosure"]
 ].forEach(function(pair){
   document.getElementById(pair[0]).addEventListener("click", function(){
