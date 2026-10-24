@@ -244,8 +244,6 @@ h1,h2,h3{font-weight:700;margin:0}
       <div class="plus-row"><span>Aprobado, falta cobrar</span><span id="pendiente-aprobado">$0</span></div>
     </div>
   </div>
-
-  <div class="pending-strip" id="pending-strip"></div>
   </div>
 
   <div class="panel" id="panel-rendiciones">
@@ -663,11 +661,6 @@ function renderPendingStrip(){
     if(e.estado==="enviado") enviado += Number(e.monto)||0;
     if(e.estado==="pendiente") pendiente += Number(e.monto)||0;
   });
-  var el = document.getElementById("pending-strip");
-  el.innerHTML =
-    '<div class="pending-chip">Esperando código <b>'+fmt(enviado)+'</b></div>' +
-    '<div class="pending-chip">Aprobado, falta cobrar <b>'+fmt(pendiente)+'</b></div>';
-
   document.getElementById("pendiente-esperando").textContent = fmt(enviado);
   document.getElementById("pendiente-aprobado").textContent = fmt(pendiente);
 }
