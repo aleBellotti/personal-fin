@@ -257,10 +257,9 @@ h1,h2,h3{font-weight:700;margin:0}
       <div class="value" id="pendiente-valor">$0</div>
     </div>
     <div class="plus-breakdown">
-      <div class="plus-row"><span>Rendiciones</span><span id="pendiente-rendiciones">$0</span></div>
       <div class="plus-row"><span>Trabajos extra</span><span id="pendiente-extras">$0</span></div>
-      <div class="plus-row"><span>Esperando código</span><span id="pendiente-esperando">$0</span></div>
-      <div class="plus-row"><span>Aprobado, falta cobrar</span><span id="pendiente-aprobado">$0</span></div>
+      <div class="plus-row"><span>Presentado</span><span id="pendiente-esperando">$0</span></div>
+      <div class="plus-row"><span>Pendiente</span><span id="pendiente-aprobado">$0</span></div>
     </div>
   </div>
   </div>
@@ -766,7 +765,6 @@ function renderBalances(){
   document.getElementById("sum-total").textContent = maskFmt(proyectado);
   document.getElementById("sum-total-sub-valor").textContent = fmt(b.total);
   document.getElementById("pendiente-valor").textContent = "+ " + fmt(pendiente);
-  document.getElementById("pendiente-rendiciones").textContent = "+ " + fmt(pendienteRendiciones);
   document.getElementById("pendiente-extras").textContent = "+ " + fmt(pendienteExtras);
 
   var pct = proyectado > 0 ? Math.round((b.total / proyectado) * 100) : 0;
