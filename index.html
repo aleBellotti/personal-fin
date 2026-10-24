@@ -240,6 +240,8 @@ h1,h2,h3{font-weight:700;margin:0}
     <div class="plus-breakdown">
       <div class="plus-row"><span>Rendiciones</span><span id="pendiente-rendiciones">$0</span></div>
       <div class="plus-row"><span>Trabajos extra</span><span id="pendiente-extras">$0</span></div>
+      <div class="plus-row"><span>Esperando código</span><span id="pendiente-esperando">$0</span></div>
+      <div class="plus-row"><span>Aprobado, falta cobrar</span><span id="pendiente-aprobado">$0</span></div>
     </div>
   </div>
 
@@ -631,16 +633,16 @@ function maskFmt(n, prefix){
 
 function renderBalances(){
   var b = computeBalances();
-  document.getElementById("bal-total").textContent = maskFmt(b.total);
+  document.getElementById("bal-total").textContent = fmt(b.total);
 
   var pendienteRendiciones = computePendiente();
   var pendienteExtras = computeExtrasPendiente();
   var pendiente = pendienteRendiciones + pendienteExtras;
   var proyectado = b.total + pendiente;
+  // solo el Proyectado se tapa con el ojo; el resto del desglose queda siempre visible
   document.getElementById("sum-total").textContent = maskFmt(proyectado);
-  document.getElementById("sum-total-sub-valor").textContent = maskFmt(b.total);
-  document.getElementById("pendiente-valor").textContent = maskFmt(pendiente, "+ ");
-  // el desglose (rendiciones/extras, y cuentas abajo) queda siempre visible
+  document.getElementById("sum-total-sub-valor").textContent = fmt(b.total);
+  document.getElementById("pendiente-valor").textContent = "+ " + fmt(pendiente);
   document.getElementById("pendiente-rendiciones").textContent = "+ " + fmt(pendienteRendiciones);
   document.getElementById("pendiente-extras").textContent = "+ " + fmt(pendienteExtras);
 
@@ -665,6 +667,9 @@ function renderPendingStrip(){
   el.innerHTML =
     '<div class="pending-chip">Esperando código <b>'+fmt(enviado)+'</b></div>' +
     '<div class="pending-chip">Aprobado, falta cobrar <b>'+fmt(pendiente)+'</b></div>';
+
+  document.getElementById("pendiente-esperando").textContent = fmt(enviado);
+  document.getElementById("pendiente-aprobado").textContent = fmt(pendiente);
 }
 
 // --- rendiciones tab ---
