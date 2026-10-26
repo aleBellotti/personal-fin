@@ -700,6 +700,16 @@ if(!state.usd.movimientos){ state.usd.movimientos = []; }
 if(!state.settings){ state.settings = defaultSettings(); }
 ACCOUNTS.forEach(function(a){ if(state.settings[a.settingsKey]===undefined) state.settings[a.settingsKey] = 0; });
 
+// migración única: cargar un gasto a rendir ya no descuenta saldo, así que
+// se borran los movimientos "adelantado" que habían quedado de antes
+(function limpiarAdelantosViejos(){
+  var antes = state.movements.length;
+  state.movements = state.movements.filter(function(m){
+    return !(m.expenseId && m.tipo === "gasto");
+  });
+  if(state.movements.length !== antes) save();
+})();
+
 // --- balance calculation ---
 function computeBalances(){
   var bal = {};
@@ -878,10 +888,8 @@ document.getElementById("r-add").addEventListener("click", function(){
     estado: "cargado", pagadoPorMi: pagadoPorMi, cuenta: pagadoPorMi ? cuenta : null,
     codigo: null, tipo: null, log: []
   });
-
-  if(pagadoPorMi){
-    state.movements.push({id:uid(), expenseId:expenseId, tipo:"gasto", desc:(desc||categoria)+" (adelantado)", monto:monto, fecha:fecha, cuenta:cuenta});
-  }
+  // nota: cargar un gasto a rendir ya no descuenta saldo de ninguna cuenta;
+  // "lo pagué yo" queda solo como dato informativo
 
   save();
   document.getElementById("r-desc").value = "";
@@ -1028,21 +1036,6 @@ function openEditarModal(exp){
     exp.categoria = categoria;
     exp.pagadoPorMi = pagadoPorMi;
     exp.cuenta = pagadoPorMi ? cuenta : null;
-
-    // sincronizar el movimiento de adelanto asociado, si corresponde
-    var adelanto = state.movements.find(function(m){ return m.expenseId === exp.id && m.tipo === "gasto"; });
-    if(pagadoPorMi){
-      if(adelanto){
-        adelanto.desc = (desc||categoria) + " (adelantado)";
-        adelanto.monto = monto;
-        adelanto.fecha = fecha;
-        adelanto.cuenta = cuenta;
-      } else {
-        state.movements.push({id:uid(), expenseId:exp.id, tipo:"gasto", desc:(desc||categoria)+" (adelantado)", monto:monto, fecha:fecha, cuenta:cuenta});
-      }
-    } else if(adelanto){
-      state.movements = state.movements.filter(function(m){ return m !== adelanto; });
-    }
 
     // sincronizar el movimiento de cobro, si el gasto ya estaba pagado
     var cobro = state.movements.find(function(m){ return m.expenseId === exp.id && m.tipo === "cobro_rendicion"; });
