@@ -637,33 +637,122 @@ function load(){
 function cacheLocal(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
 }
-function save(){
+var cloudReady = false;      // true recién cuando Firestore respondió desde el servidor
+var cloudCount = 0;          // cantidad de registros que había en la nube (guarda anti-vaciado)
+var LAST_DL_KEY = "rendiciones_ultima_descarga";
+
+function countRecords(d){
+  if(!d) return 0;
+  return (d.expenses||[]).length + (d.movements||[]).length + (d.trabajos||[]).length +
+         ((d.usd && d.usd.movimientos) || []).length;
+}
+function snapshotOf(s){
+  return {
+    expenses: s.expenses,
+    movements: s.movements,
+    trabajos: s.trabajos,
+    usd: s.usd,
+    settings: s.settings
+  };
+}
+// save(force): force=true salta la guarda anti-vaciado (import / restaurar)
+function save(force){
   cacheLocal();
+  if(!cloudReady) return;   // nunca escribir en la nube antes de saber qué hay ahí
   if(saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(function(){
-    docRef.set({
-      expenses: state.expenses,
-      movements: state.movements,
-      trabajos: state.trabajos,
-      usd: state.usd,
-      settings: state.settings
+    var now = countRecords(state);
+    if(!force && cloudCount >= 5 && now < cloudCount * 0.5){
+      if(!confirm("Ojo: el guardado tiene " + now + " registros y la nube tiene " + cloudCount + ". ¿Seguro que querés sobrescribir? (Cancelar recarga los datos de la nube)")){
+        docRef.get({source:"server"}).then(function(snap){ if(snap.exists) applyRemote(snap.data()); });
+        return;
+      }
+    }
+    docRef.set(snapshotOf(state)).then(function(){
+      cloudCount = now;
+      scheduleSheetsPush();
     }).catch(function(err){ console.error("Error guardando en Firestore:", err); });
   }, 400);
 }
 
-docRef.onSnapshot(function(snap){
-  if(!snap.exists) return;
-  var data = snap.data();
+function applyRemote(data){
   applyingRemote = true;
   state.expenses = data.expenses || [];
   state.movements = data.movements || [];
   state.trabajos = data.trabajos || [];
   state.usd = data.usd || defaultUsd();
+  if(!state.usd.movimientos) state.usd.movimientos = [];
   state.settings = data.settings || defaultSettings();
   ACCOUNTS.forEach(function(a){ if(state.settings[a.settingsKey]===undefined) state.settings[a.settingsKey] = 0; });
+  cloudCount = countRecords(state);
   cacheLocal();
   renderAll();
   applyingRemote = false;
+}
+
+// --- respaldo espejo en Google Sheets (Apps Script) ---
+var SHEETS_LOCAL_KEY = "rendiciones_sheets_cfg";
+var LAST_SHEETS_KEY = "rendiciones_ultimo_sheets";
+var sheetsTimer = null;
+function getSheetsCfg(){
+  var c = state.settings && state.settings.sheets;
+  if(c && c.url && c.token) return c;
+  try{
+    var r = JSON.parse(localStorage.getItem(SHEETS_LOCAL_KEY) || "null");
+    if(r && r.url && r.token) return r;
+  }catch(e){}
+  return null;
+}
+function setSheetsCfg(url, token){
+  url = (url||"").trim(); token = (token||"").trim();
+  if(url && token){
+    state.settings.sheets = { url:url, token:token };
+    try{ localStorage.setItem(SHEETS_LOCAL_KEY, JSON.stringify(state.settings.sheets)); }catch(e){}
+  } else {
+    delete state.settings.sheets;
+    try{ localStorage.removeItem(SHEETS_LOCAL_KEY); }catch(e){}
+  }
+}
+function sheetsCall(cfg, payload){
+  payload.token = cfg.token;
+  return fetch(cfg.url, {
+    method:"POST",
+    headers:{ "Content-Type":"text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  }).then(function(r){ return r.json(); }).then(function(j){
+    if(!j.ok) throw new Error(j.error || "Error desconocido");
+    return j;
+  });
+}
+function sheetsPush(){
+  var cfg = getSheetsCfg();
+  if(!cfg) return Promise.reject(new Error("Falta configurar Google Sheets"));
+  if(!cloudReady) return Promise.reject(new Error("Todavía sincronizando, probá en unos segundos"));
+  return sheetsCall(cfg, { action:"backup", data:snapshotOf(state) }).then(function(j){
+    try{ localStorage.setItem(LAST_SHEETS_KEY, new Date().toLocaleString("es-AR")); }catch(e){}
+    return j;
+  });
+}
+function scheduleSheetsPush(){
+  if(!getSheetsCfg()) return;
+  if(sheetsTimer) clearTimeout(sheetsTimer);
+  sheetsTimer = setTimeout(function(){
+    sheetsPush().catch(function(e){ console.warn("Respaldo a Sheets falló:", e); });
+  }, 60000);
+}
+
+var firstSnapshot = true;
+docRef.onSnapshot(function(snap){
+  var fromServer = !snap.metadata.fromCache;
+  if(snap.exists){
+    var data = snap.data();
+    applyRemote(data);
+    if(fromServer){ cloudReady = true; firstSnapshot = false; }
+  } else if(fromServer){
+    // cuenta nueva (o doc inexistente de verdad): recién ahora es seguro subir lo local
+    cloudReady = true; firstSnapshot = false;
+    save();
+  }
 }, function(err){ console.error("Error escuchando Firestore:", err); });
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -690,7 +779,6 @@ function seed(){
   state.trabajos = [];
   state.usd = defaultUsd();
   state.settings = defaultSettings();
-  save();
 }
 
 if(!load()){ seed(); }
@@ -1062,7 +1150,21 @@ function openSettingsModal(){
           '<button class="btn btn-ghost logout-row" id="logout-btn" style="width:100%">Cerrar sesión</button>' +
           '<div class="section-title" style="margin-top:14px">Saldos iniciales</div>' +
           '<div class="form-grid" id="set-saldos-grid"></div>' +
+          '<p class="hint-text" id="saldos-lock-note" style="margin-top:8px"></p>' +
+          '<button class="btn btn-ghost" id="btn-desbloquear" style="width:100%;margin-bottom:6px" hidden>Desbloquear para corregir</button>' +
           '<div class="section-title" style="margin-top:6px">Respaldo de datos</div>' +
+          '<p class="hint-text">Copia espejo en tu Google Sheet: se actualiza sola 1 minuto después de cada cambio.</p>' +
+          '<div class="form-grid">' +
+            '<div class="form-row"><label>URL del Apps Script</label><input id="set-sheets-url" type="url" placeholder="https://script.google.com/macros/s/.../exec"></div>' +
+            '<div class="form-row"><label>Clave</label><input id="set-sheets-token" type="password" autocomplete="off"></div>' +
+          '</div>' +
+          '<div class="btn-row" style="margin-bottom:6px">' +
+            '<button class="btn btn-ghost" id="btn-sheets-push" style="flex:1">Respaldar ahora</button>' +
+            '<button class="btn btn-ghost" id="btn-sheets-restore" style="flex:1">Restaurar de Sheets</button>' +
+          '</div>' +
+          '<p class="hint-text" id="sheets-status"></p>' +
+          '<button class="btn btn-ghost" id="btn-descargar" style="width:100%;margin-bottom:8px">Descargar .json</button>' +
+          '<p class="hint-text" id="ultima-descarga"></p>' +
           '<p class="hint-text">Movés tus gastos y movimientos entre dispositivos (por ejemplo, de la PC al celular) copiando y pegando este texto.</p>' +
           '<div class="btn-row">' +
             '<button class="btn btn-ghost" id="btn-exportar" style="flex:1">Exportar</button>' +
@@ -1084,6 +1186,60 @@ function openSettingsModal(){
     document.getElementById("set-"+a.id).value = state.settings[a.settingsKey] || 0;
   });
 
+  // saldos iniciales: fijos una vez guardados, se corrigen solo desbloqueando
+  var locked = !!state.settings.saldosBloqueados;
+  function applyLockUi(){
+    ACCOUNTS.forEach(function(a){ document.getElementById("set-"+a.id).disabled = locked; });
+    document.getElementById("btn-desbloquear").hidden = !locked;
+    document.getElementById("saldos-lock-note").textContent = locked
+      ? "🔒 Saldos fijados" + (state.settings.saldosFijadosEn ? " el " + state.settings.saldosFijadosEn : "") + ". Desbloqueá solo para corregir un error."
+      : "Al guardar, los saldos iniciales quedan fijos.";
+  }
+  applyLockUi();
+  document.getElementById("btn-desbloquear").addEventListener("click", function(){
+    if(!confirm("¿Desbloquear los saldos iniciales para corregirlos?")) return;
+    locked = false;
+    applyLockUi();
+  });
+  var ult = null, ultS = null;
+  try{ ult = localStorage.getItem(LAST_DL_KEY); ultS = localStorage.getItem(LAST_SHEETS_KEY); }catch(e){}
+  document.getElementById("ultima-descarga").textContent = ult
+    ? "Última descarga .json: " + ult + "."
+    : "Todavía no descargaste ningún archivo .json.";
+  var sCfg = getSheetsCfg();
+  document.getElementById("set-sheets-url").value = sCfg ? sCfg.url : "";
+  document.getElementById("set-sheets-token").value = sCfg ? sCfg.token : "";
+  var statusEl = document.getElementById("sheets-status");
+  statusEl.textContent = ultS ? "Último respaldo en Sheets: " + ultS + "." : "Sin respaldos en Sheets todavía.";
+  function readSheetsInputs(){
+    setSheetsCfg(document.getElementById("set-sheets-url").value, document.getElementById("set-sheets-token").value);
+    return getSheetsCfg();
+  }
+  document.getElementById("btn-sheets-push").addEventListener("click", function(){
+    if(!readSheetsInputs()){ statusEl.textContent = "Completá URL y clave."; return; }
+    statusEl.textContent = "Respaldando...";
+    sheetsPush().then(function(j){
+      save();
+      statusEl.textContent = "Listo ✓ (" + j.registros + " registros) " + new Date().toLocaleString("es-AR");
+    }).catch(function(e){ statusEl.textContent = "Error: " + e.message; });
+  });
+  document.getElementById("btn-sheets-restore").addEventListener("click", function(){
+    var cfg = readSheetsInputs();
+    if(!cfg){ statusEl.textContent = "Completá URL y clave."; return; }
+    statusEl.textContent = "Leyendo planilla...";
+    sheetsCall(cfg, { action:"restore" }).then(function(j){
+      var d = j.data;
+      if(!d || !Array.isArray(d.expenses) || !Array.isArray(d.movements)) throw new Error("Respaldo inválido");
+      var msg = "Respaldo del " + new Date(j.fecha).toLocaleString("es-AR") + " con " + countRecords(d) + " registros.\nSe reemplazan TODOS los datos actuales. ¿Restaurar?";
+      if(!confirm(msg)){ statusEl.textContent = "Cancelado."; return; }
+      applyRemote(d);
+      setSheetsCfg(cfg.url, cfg.token);
+      save(true);
+      closeModal();
+    }).catch(function(e){ statusEl.textContent = "Error: " + e.message; });
+  });
+  document.getElementById("btn-descargar").addEventListener("click", downloadBackup);
+
   bindOverlayClose(document.getElementById("modal-overlay"));
   document.getElementById("modal-close").addEventListener("click", closeModal);
   document.getElementById("modal-cancel").addEventListener("click", closeModal);
@@ -1093,13 +1249,37 @@ function openSettingsModal(){
     firebase.auth().signOut();
   });
   document.getElementById("modal-save").addEventListener("click", function(){
-    ACCOUNTS.forEach(function(a){
-      state.settings[a.settingsKey] = parseFloat(document.getElementById("set-"+a.id).value) || 0;
-    });
+    setSheetsCfg(document.getElementById("set-sheets-url").value, document.getElementById("set-sheets-token").value);
+    if(!locked){
+      var cambios = [];
+      ACCOUNTS.forEach(function(a){
+        var nuevo = parseFloat(document.getElementById("set-"+a.id).value) || 0;
+        var ant = state.settings[a.settingsKey] || 0;
+        if(nuevo !== ant) cambios.push({ cuenta:a.id, antes:ant, despues:nuevo });
+        state.settings[a.settingsKey] = nuevo;
+      });
+      if(!state.settings.saldosLog) state.settings.saldosLog = [];
+      if(cambios.length) state.settings.saldosLog.push({ fecha:new Date().toISOString(), cambios:cambios });
+      state.settings.saldosBloqueados = true;
+      state.settings.saldosFijadosEn = fmtDate(todayISO()) + " " + new Date().getFullYear();
+    }
     save();
     closeModal();
     renderAll();
   });
+}
+
+function downloadBackup(){
+  var json = JSON.stringify(snapshotOf(state), null, 2);
+  var blob = new Blob([json], {type:"application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "finanzas-respaldo-" + todayISO() + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  try{ localStorage.setItem(LAST_DL_KEY, todayISO()); }catch(e){}
+  var el = document.getElementById("ultima-descarga");
+  if(el) el.textContent = "Última descarga: " + todayISO() + ".";
 }
 
 function openExportModal(){
@@ -1188,7 +1368,7 @@ function openImportModal(){
     state.usd = parsed.usd || defaultUsd();
     state.settings = parsed.settings || defaultSettings();
     ACCOUNTS.forEach(function(a){ if(state.settings[a.settingsKey]===undefined) state.settings[a.settingsKey] = 0; });
-    save();
+    save(true);
     closeModal();
     renderAll();
   });
